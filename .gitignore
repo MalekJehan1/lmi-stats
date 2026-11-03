@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+__pycache__/
+.agents/
+.claude/
+.cursor/
+.windsurf/
+

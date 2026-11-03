@@ -1,0 +1,97 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Summoner {
+  puuid         String
+  platform      String
+  gameName      String
+  tagLine       String
+  gameNameNorm  String
+  tagLineNorm   String
+  profileIconId Int
+  summonerLevel Int
+  lastUpdatedAt DateTime
+  leagueEntries LeagueEntry[]
+
+  @@id([puuid, platform])
+  @@index([platform, gameNameNorm, tagLineNorm])
+}
+
+model LeagueEntry {
+  puuid        String
+  platform     String
+  queueType    String // RANKED_SOLO_5x5 | RANKED_FLEX_SR
+  tier         String
+  rank         String
+  leaguePoints Int
+  wins         Int
+  losses       Int
+  summoner     Summoner @relation(fields: [puuid, platform], references: [puuid, platform], onDelete: Cascade)
+
+  @@id([puuid, platform, queueType])
+}
+
+model Match {
+  matchId            String             @id // RIOT-07
+  platform           String
+  queueId            Int
+  gameStartTimestamp BigInt
+  gameDuration       Int                // segundos
+  gameVersion        String
+  raw                Json               // DTO completo, para features futuras (champion-meta)
+  participants       MatchParticipant[]
+  teams              MatchTeam[]
+}
+
+model MatchParticipant {
+  matchId            String
+  puuid              String
+  participantId      Int
+  teamId             Int
+  riotIdGameName     String
+  riotIdTagline      String
+  championId         Int
+  championName       String
+  champLevel         Int
+  kills              Int
+  deaths             Int
+  assists            Int
+  cs                 Int     // totalMinionsKilled + neutralMinionsKilled
+  goldEarned         Int
+  visionScore        Int
+  damageToChampions  Int
+  items              Int[]   // item0..item6
+  summoner1Id        Int
+  summoner2Id        Int
+  keystoneId         Int     // perks.styles[0].selections[0].perk
+  secondaryStyleId   Int     // perks.styles[1].style
+  win                Boolean
+  earlySurrender     Boolean // gameEndedInEarlySurrender
+  queueId            Int     // desnormalizado para filtros
+  gameStartTimestamp BigInt
+  match              Match   @relation(fields: [matchId], references: [matchId], onDelete: Cascade)
+
+  @@id([matchId, participantId])
+  @@index([puuid, gameStartTimestamp(sort: Desc)])
+  @@index([puuid, queueId, gameStartTimestamp(sort: Desc)])
+}
+
+model MatchTeam {
+  matchId String
+  teamId  Int
+  win     Boolean
+  kills   Int     // objectives.champion.kills
+  towers  Int
+  dragons Int
+  barons  Int
+  match   Match   @relation(fields: [matchId], references: [matchId], onDelete: Cascade)
+
+  @@id([matchId, teamId])
+}
+
