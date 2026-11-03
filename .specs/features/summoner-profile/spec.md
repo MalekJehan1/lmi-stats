@@ -286,8 +286,8 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | CHMP-06 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
 | CHMP-07 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
 | CHMP-08 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
-| RIOT-01 | P1: Integração Riot API | Phase 1 (T5), Phase 3 (T22) | In Tasks |
-| RIOT-02 | P1: Integração Riot API | Phase 1 (T5, T6) | In Tasks |
+| RIOT-01 | P1: Integração Riot API | Phase 1 (T5), Phase 3 (T22) | In Progress (T5 done) |
+| RIOT-02 | P1: Integração Riot API | Phase 1 (T5, T6) | In Progress (T5 done) |
 | RIOT-03 | P1: Integração Riot API | Phase 1 (T6) | In Tasks |
 | RIOT-04 | P1: Integração Riot API | Phase 1 (T6) | In Tasks |
 | RIOT-05 | P1: Integração Riot API | Phase 1 (T6) | In Tasks |

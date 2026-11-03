@@ -156,9 +156,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `acquire(routing)` queues calls beyond 20/1s or 100/120s and `pause(routing, ms)` blocks subsequent calls
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 13+ tests pass
+- [x] `acquire(routing)` queues calls beyond 20/1s or 100/120s and `pause(routing, ms)` blocks subsequent calls
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 13+ tests pass
 
 **Tests**: unit
 **Gate**: quick
