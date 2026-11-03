@@ -241,7 +241,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | SRCH-02 | P1: Buscar jogador | Phase 1 (T3), Phase 3 (T16) | In Progress (T3 done) |
 | SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
 | SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | In Tasks |
-| SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | In Tasks |
+| SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | In Progress (T9 done) |
 | SRCH-06 | P1: Buscar jogador | Phase 1 (T4) | Verified |
 | SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Tasks |
 | SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Tasks |
@@ -277,7 +277,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | MATCH-05 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
 | MATCH-06 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
 | MATCH-07 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
-| MATCH-08 | P1: Detalhe da partida | Phase 2 (T9), Phase 3 (T19) | In Tasks |
+| MATCH-08 | P1: Detalhe da partida | Phase 2 (T9), Phase 3 (T19) | In Progress (T9 done) |
 | CHMP-01 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
 | CHMP-02 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
 | CHMP-03 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
@@ -292,7 +292,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | RIOT-04 | P1: Integração Riot API | Phase 1 (T6) | Verified |
 | RIOT-05 | P1: Integração Riot API | Phase 1 (T6) | Verified |
 | RIOT-06 | P1: Integração Riot API | Phase 1 (T6) | Verified |
-| RIOT-07 | P1: Integração Riot API | Phase 1 (T1), Phase 2 (T9) | In Progress (T1 done) |
+| RIOT-07 | P1: Integração Riot API | Phase 1 (T1), Phase 2 (T9) | Verified |
 | RIOT-08 | P1: Integração Riot API | Phase 1 (T7) | Verified |
 | I18N-01 | P1: Idioma e aviso legal | Phase 1 (T2) | Verified |
 | LEGAL-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | In Progress (T2 done) |

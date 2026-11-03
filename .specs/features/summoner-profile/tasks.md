@@ -232,9 +232,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Repository persists summoners, league entries and matches idempotently by `matchId` (with Prisma and in-memory adapter for fast deterministic tests)
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 40+ tests pass
+- [x] Repository persists summoners, league entries and matches idempotently by `matchId` (with Prisma and in-memory adapter for fast deterministic tests)
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 40+ tests pass
 
 **Tests**: integration
 **Gate**: full
@@ -677,5 +677,5 @@ Proof: run unit | ✓ tests/ui/search-and-profile.test.tsx > Branding and Legal 
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** Batch 1 (Phase 1: T1-T8) at initial state
+**Dispatched:** Batch 1 (Phase 1: T1-T8) returned at dc9fb1f; Batch 2 (Phase 2: T9-T15) at dc9fb1f
 **Walked:** none
