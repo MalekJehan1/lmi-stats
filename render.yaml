@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: lmi-stats-web
+    runtime: node
+    plan: starter
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: SYNC_MODE
+        value: worker
+      - key: RIOT_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lmi-stats-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: lmi-stats-redis
+          property: connectionString
+
+  - type: worker
+    name: lmi-stats-worker
+    runtime: node
+    plan: starter
+    buildCommand: pnpm install && pnpm build
+    startCommand: node --loader ts-node/esm src/worker/index.ts
+    envVars:
+      - key: SYNC_MODE
+        value: worker
+      - key: RUN_STANDALONE_WORKER
+        value: "true"
+      - key: RIOT_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lmi-stats-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: lmi-stats-redis
+          property: connectionString
+
+  - type: redis
+    name: lmi-stats-redis
+    plan: starter
+    ipAllowList: []
+
+databases:
+  - name: lmi-stats-db
+    plan: starter
+    databaseName: lmi_stats
+    user: lmi_stats

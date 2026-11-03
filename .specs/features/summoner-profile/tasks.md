@@ -479,8 +479,8 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `src/worker/index.ts`, `vercel.json` and `render.yaml` created
-- [ ] Gate check passes: `pnpm typecheck; pnpm lint; pnpm build`
+- [x] `src/worker/index.ts`, `vercel.json` and `render.yaml` created
+- [x] Gate check passes: `pnpm typecheck; pnpm lint; pnpm build`
 
 **Tests**: none
 **Gate**: build

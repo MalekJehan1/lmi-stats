@@ -6,9 +6,9 @@ import {
   ProfileHeader,
   RankedCards,
   RefreshButton,
+  SummonerProfileView,
 } from '@/components/ProfileHeader';
 import HomePage from '@/app/page';
-import { SummonerProfileView } from '@/app/[platform]/summoner/[slug]/page';
 import { PLATFORMS } from '@/server/riot/routing';
 import { metadata } from '@/app/layout';
 import { SummonerProfileData } from '@/server/db/repository';

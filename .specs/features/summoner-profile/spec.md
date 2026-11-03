@@ -8,9 +8,9 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 
 ## Goals
 
-- [ ] Um Riot ID válido e existente abre o perfil completo (perfil, elos, 20 partidas, estatísticas) na primeira busca.
-- [ ] Um perfil já salvo abre sem nenhuma chamada à Riot API.
-- [ ] Nenhuma chamada à Riot API excede os limites da Development key (20 req/1 s, 100 req/2 min por região de roteamento).
+- [x] Um Riot ID válido e existente abre o perfil completo (perfil, elos, 20 partidas, estatísticas) na primeira busca.
+- [x] Um perfil já salvo abre sem nenhuma chamada à Riot API.
+- [x] Nenhuma chamada à Riot API excede os limites da Development key (20 req/1 s, 100 req/2 min por região de roteamento).
 
 ## Out of Scope
 
@@ -286,7 +286,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | CHMP-06 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
 | CHMP-07 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
 | CHMP-08 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
-| RIOT-01 | P1: Integração Riot API | Phase 1 (T5), Phase 3 (T22) | In Progress (T5 done) |
+| RIOT-01 | P1: Integração Riot API | Phase 1 (T5), Phase 3 (T22) | Verified |
 | RIOT-02 | P1: Integração Riot API | Phase 1 (T5, T6) | Verified |
 | RIOT-03 | P1: Integração Riot API | Phase 1 (T6) | Verified |
 | RIOT-04 | P1: Integração Riot API | Phase 1 (T6) | Verified |
@@ -329,7 +329,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 
 ## Success Criteria
 
-- [ ] Primeira busca de um jogador com 20 partidas completa em menos de 5 s com a Development key livre.
-- [ ] Perfil já salvo abre em menos de 1 s sem chamar a Riot API.
-- [ ] Zero respostas 429 da Riot API causadas pela plataforma em uso normal.
+- [x] Primeira busca de um jogador com 20 partidas completa em menos de 5 s com a Development key livre.
+- [x] Perfil já salvo abre em menos de 1 s sem chamar a Riot API.
+- [x] Zero respostas 429 da Riot API causadas pela plataforma em uso normal.
 
