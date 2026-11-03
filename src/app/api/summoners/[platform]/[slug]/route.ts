@@ -54,22 +54,26 @@ async function handleLookup(
     dispatcher.getSyncService().getRepository() ?? getRepository();
 
   // SRCH-05: If summoner is already saved in DB, return directly with 0 Riot API calls
-  const existing = await repository.findSummonerByRiotId(
-    platform,
-    parsed.gameName,
-    parsed.tagLine
-  );
-  if (existing) {
-    const profile = await repository.getProfileData(platform, existing.puuid);
-    if (profile) {
-      return NextResponse.json(
-        {
-          profile,
-          fromCache: true,
-        },
-        { status: 200 }
-      );
+  try {
+    const existing = await repository.findSummonerByRiotId(
+      platform,
+      parsed.gameName,
+      parsed.tagLine
+    );
+    if (existing) {
+      const profile = await repository.getProfileData(platform, existing.puuid);
+      if (profile) {
+        return NextResponse.json(
+          {
+            profile,
+            fromCache: true,
+          },
+          { status: 200 }
+        );
+      }
     }
+  } catch (dbErr) {
+    console.error('Database read error on initial lookup check:', dbErr);
   }
 
   // SRCH-04: First search fetches from Riot API via SyncDispatcher with 30s timeout (SRCH-10)
@@ -123,10 +127,12 @@ async function handleLookup(
       );
     }
 
+    console.error('Lookup route error:', err);
     return NextResponse.json(
       {
         error: 'unavailable',
         message: t('refresh.error'),
+        detail: err instanceof Error ? err.message : String(err),
       },
       { status: 503 }
     );
