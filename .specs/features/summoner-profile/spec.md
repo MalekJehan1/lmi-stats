@@ -260,18 +260,18 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | REFR-07 | P1: Atualizar dados | Phase 2 (T14), Phase 3 (T17) | Verified |
 | REFR-08 | P1: Atualizar dados | Phase 2 (T11, T14), Phase 3 (T17) | Verified |
 | REFR-09 | P1: Atualizar dados | Phase 2 (T11, T14) | Verified |
-| HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11, T15 done) |
-| HIST-02 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
-| HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | In Progress (T8, T15 done) |
-| HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11, T15 done) |
-| HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11, T15 done) |
-| HIST-06 | P1: Histórico | Phase 3 (T20) | In Tasks |
-| HIST-07 | P1: Histórico | Phase 3 (T20) | In Tasks |
-| HIST-08 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
-| HIST-09 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
-| HIST-10 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
-| MATCH-01 | P1: Detalhe da partida | Phase 3 (T20) | In Tasks |
-| MATCH-02 | P1: Detalhe da partida | Phase 3 (T20) | In Tasks |
+| HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | Verified |
+| HIST-02 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | Verified |
+| HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | Verified |
+| HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | Verified |
+| HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | Verified |
+| HIST-06 | P1: Histórico | Phase 3 (T20) | Verified |
+| HIST-07 | P1: Histórico | Phase 3 (T20) | Verified |
+| HIST-08 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | Verified |
+| HIST-09 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | Verified |
+| HIST-10 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | Verified |
+| MATCH-01 | P1: Detalhe da partida | Phase 3 (T20) | Verified |
+| MATCH-02 | P1: Detalhe da partida | Phase 3 (T20) | Verified |
 | MATCH-03 | P1: Detalhe da partida | Phase 3 (T19) | Verified |
 | MATCH-04 | P1: Detalhe da partida | Phase 3 (T19) | Verified |
 | MATCH-05 | P1: Detalhe da partida | Phase 3 (T19) | Verified |

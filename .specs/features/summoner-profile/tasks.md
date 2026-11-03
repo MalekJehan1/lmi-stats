@@ -441,9 +441,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Switches tabs, toggles inline `MatchDetail`, loads 20 more matches, hides `"Mostrar mais"` when exhausted, and shows `"Nenhuma partida encontrada"` when empty
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 98+ tests pass
+- [x] Switches tabs, toggles inline `MatchDetail`, loads 20 more matches, hides `"Mostrar mais"` when exhausted, and shows `"Nenhuma partida encontrada"` when empty
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 98+ tests pass
 
 **Tests**: unit
 **Gate**: quick

@@ -1,8 +1,9 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ChampionStatsPanel } from '@/components/ChampionStatsPanel';
 import { MatchDetail } from '@/components/MatchDetail';
+import { MatchHistory } from '@/components/MatchHistory';
 import {
   aggregateChampionStats,
   csPerMin,
@@ -251,6 +252,42 @@ describe('ChampionStatsPanel', () => {
 });
 
 describe('MatchDetail', () => {
+  it('MATCH-01 expands inline detail with both teams on click', () => {
+    const match = buildSampleMatchSummary('BR1_100');
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={[match]}
+      />
+    );
+
+    expect(screen.queryByTestId('match-detail-BR1_100')).toBeNull();
+    fireEvent.click(screen.getByTestId('match-row-BR1_100'));
+
+    expect(screen.getByTestId('match-detail-BR1_100')).toBeTruthy();
+    expect(screen.getByTestId('match-team-100')).toBeTruthy();
+    expect(screen.getByTestId('match-team-200')).toBeTruthy();
+  });
+
+  it('MATCH-02 collapses inline detail when clicked again', () => {
+    const match = buildSampleMatchSummary('BR1_100');
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={[match]}
+      />
+    );
+
+    const row = screen.getByTestId('match-row-BR1_100');
+    fireEvent.click(row);
+    expect(screen.getByTestId('match-detail-BR1_100')).toBeTruthy();
+
+    fireEvent.click(row);
+    expect(screen.queryByTestId('match-detail-BR1_100')).toBeNull();
+  });
+
   it('MATCH-03 renders all 10 players with full stats and 7 items', () => {
     const match = buildSampleMatchSummary('BR1_100');
     render(<MatchDetail match={match} ownerPuuid="puuid-kami" />);
@@ -338,10 +375,246 @@ describe('MatchDetail', () => {
   it('MATCH-08 opens match detail using saved data with zero network calls', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     const match = buildSampleMatchSummary('BR1_100');
-    render(<MatchDetail match={match} ownerPuuid="puuid-kami" />);
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={[match]}
+      />
+    );
 
+    fireEvent.click(screen.getByTestId('match-row-BR1_100'));
     expect(screen.getByTestId('match-detail-BR1_100')).toBeTruthy();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
+  });
+});
+
+describe('MatchHistory', () => {
+  it('HIST-01 lists 20 most recent matches ordered newest to oldest', () => {
+    const twentyFive = Array.from({ length: 25 }, (_, idx) =>
+      buildSampleMatchSummary(`BR1_M_${idx + 1}`, {
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + (idx + 1) * 60_000,
+      })
+    );
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={twentyFive}
+        initialHasMore
+      />
+    );
+
+    const list = screen.getByTestId('match-history-list');
+    const cards = Array.from(
+      list.querySelectorAll('[data-testid^="match-card-"]')
+    );
+    expect(cards).toHaveLength(20);
+    expect(cards[0].getAttribute('data-match-id')).toBe('BR1_M_25');
+    expect(cards[19].getAttribute('data-match-id')).toBe('BR1_M_6');
+  });
+
+  it('HIST-02 renders all 5 queue tabs with Todas selected by default', () => {
+    const matches = [
+      buildSampleMatchSummary('BR1_SOLO', { queueId: 420 }),
+      buildSampleMatchSummary('BR1_ARAM', { queueId: 450 }),
+    ];
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={matches}
+      />
+    );
+
+    const tabAll = screen.getByTestId('history-tab-all');
+    const tabSolo = screen.getByTestId('history-tab-solo');
+    const tabFlex = screen.getByTestId('history-tab-flex');
+    const tabNormal = screen.getByTestId('history-tab-normal');
+    const tabAram = screen.getByTestId('history-tab-aram');
+
+    expect(tabAll.textContent).toBe('Todas');
+    expect(tabSolo.textContent).toBe('Ranqueada Solo/Duo');
+    expect(tabFlex.textContent).toBe('Ranqueada Flex');
+    expect(tabNormal.textContent).toBe('Normal');
+    expect(tabAram.textContent).toBe('ARAM');
+
+    expect(tabAll.getAttribute('aria-selected')).toBe('true');
+    expect(tabSolo.getAttribute('aria-selected')).toBe('false');
+
+    fireEvent.click(tabAram);
+    expect(tabAram.getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByTestId('match-card-BR1_ARAM')).toBeTruthy();
+    expect(screen.queryByTestId('match-card-BR1_SOLO')).toBeNull();
+  });
+
+  it('HIST-05 hides Mostrar mais when no more matches exist', async () => {
+    const twenty = Array.from({ length: 20 }, (_, idx) =>
+      buildSampleMatchSummary(`BR1_P_${idx + 1}`, {
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + (idx + 20) * 60_000,
+      })
+    );
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          matches: [
+            buildSampleMatchSummary('BR1_P_OLD_1', {
+              gameStartTimestamp: DEFAULT_SEASON_START_MS + 10_000,
+            }),
+          ],
+          hasMore: false,
+          nextCursor: null,
+        }),
+        { status: 200 }
+      )
+    );
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={twenty}
+        initialHasMore
+      />
+    );
+
+    const loadMoreBtn = screen.getByTestId('history-load-more');
+    expect(loadMoreBtn.textContent).toBe('Mostrar mais');
+
+    fireEvent.click(loadMoreBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('match-card-BR1_P_OLD_1')).toBeTruthy();
+    });
+
+    expect(screen.queryByTestId('history-load-more')).toBeNull();
+    fetchSpy.mockRestore();
+  });
+
+  it('HIST-06 shows Nenhuma partida encontrada when tab is empty', () => {
+    const soloOnly = [buildSampleMatchSummary('BR1_SOLO', { queueId: 420 })];
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={soloOnly}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('history-tab-aram'));
+
+    expect(screen.getByTestId('history-empty').textContent).toBe(
+      'Nenhuma partida encontrada'
+    );
+  });
+
+  it('HIST-07 displays all required match summary fields and 7 item slots', () => {
+    const nowMs = DEFAULT_SEASON_START_MS + 10_000_000;
+    const match = buildSampleMatchSummary('BR1_FULL', {
+      queueId: 420,
+      gameStartTimestamp: nowMs - 20 * 60_000 - 1845 * 1000,
+      gameDuration: 1845, // 30:45
+      ownerChampion: 'Ahri',
+      ownerKills: 9,
+      ownerDeaths: 3,
+      ownerAssists: 6,
+      ownerWin: true,
+    });
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={[match]}
+        nowMs={nowMs}
+      />
+    );
+
+    expect(screen.getByTestId('match-queue-BR1_FULL').textContent).toBe(
+      'Ranqueada Solo/Duo'
+    );
+    expect(screen.getByTestId('match-result-BR1_FULL').textContent).toBe(
+      'Vitória'
+    );
+    expect(screen.getByTestId('match-ended-ago-BR1_FULL').textContent).toBe(
+      'há 20 minutos'
+    );
+    expect(screen.getByTestId('match-duration-BR1_FULL').textContent).toBe(
+      '30:45'
+    );
+    expect(screen.getByTestId('match-champ-level-BR1_FULL').textContent).toBe(
+      '18'
+    );
+    expect(
+      (screen.getByTestId('match-champ-img-BR1_FULL') as HTMLImageElement).src
+    ).toContain('/img/champion/Ahri.png');
+    expect(screen.getByTestId('match-kda-counts-BR1_FULL').textContent).toBe(
+      '9 / 3 / 6'
+    );
+    expect(screen.getByTestId('match-kda-ratio-BR1_FULL').textContent).toBe(
+      '5.00 KDA'
+    );
+    expect(screen.getByTestId('match-kp-BR1_FULL').textContent).toBe(
+      'P/Abates 60%'
+    );
+    expect(screen.getByTestId('match-cs-BR1_FULL').textContent).toBe(
+      'CS 240 (7.8/min)'
+    );
+
+    expect(screen.getByTestId('match-spell1-BR1_FULL')).toBeTruthy();
+    expect(screen.getByTestId('match-spell2-BR1_FULL')).toBeTruthy();
+    expect(screen.getByTestId('match-keystone-BR1_FULL')).toBeTruthy();
+    expect(screen.getByTestId('match-secondary-rune-BR1_FULL')).toBeTruthy();
+
+    for (let slot = 0; slot < 7; slot++) {
+      expect(
+        screen.getByTestId(`match-item-slot-BR1_FULL-${slot}`)
+      ).toBeTruthy();
+    }
+  });
+
+  it('HIST-09 displays Perfeito when player has 0 deaths', () => {
+    const match = buildSampleMatchSummary('BR1_PERFECT', {
+      ownerKills: 12,
+      ownerDeaths: 0,
+      ownerAssists: 9,
+    });
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={[match]}
+      />
+    );
+
+    expect(
+      screen.getByTestId('match-kda-ratio-BR1_PERFECT').textContent
+    ).toBe('Perfeito');
+  });
+
+  it('HIST-10 displays Remake with neutral badge when earlySurrender is true', () => {
+    const match = buildSampleMatchSummary('BR1_REMAKE', {
+      earlySurrender: true,
+      gameDuration: 195,
+    });
+
+    render(
+      <MatchHistory
+        platform="BR1"
+        puuid="puuid-kami"
+        initialMatches={[match]}
+      />
+    );
+
+    const badge = screen.getByTestId('match-result-BR1_REMAKE');
+    expect(badge.textContent).toBe('Remake');
+    expect(badge.getAttribute('data-remake')).toBe('true');
+    expect(badge.className).toContain('bg-slate-700/80');
   });
 });
