@@ -9,7 +9,7 @@ export const QUEUE_TABS: Record<QueueTab, number[] | null> = {
   solo: [420],
   flex: [440],
   normal: [400, 430, 480, 490],
-  aram: [450],
+  aram: [450, 2400, 720],
 };
 
 export const TABS = QUEUE_TABS;

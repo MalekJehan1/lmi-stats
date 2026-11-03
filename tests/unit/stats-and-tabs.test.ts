@@ -24,7 +24,7 @@ describe('Queue Tabs', () => {
       solo: [420],
       flex: [440],
       normal: [400, 430, 480, 490],
-      aram: [450],
+      aram: [450, 2400, 720],
     });
 
     const sample = [
@@ -36,6 +36,7 @@ describe('Queue Tabs', () => {
       { id: '6', queueId: 490 },
       { id: '7', queueId: 450 },
       { id: '8', queueId: 1700 }, // Arena
+      { id: '9', queueId: 2400 }, // ARAM: Desordem (Mayhem)
     ];
 
     expect(filterMatchesByTab(sample, 'all').map((m) => m.id)).toEqual([
@@ -47,6 +48,7 @@ describe('Queue Tabs', () => {
       '6',
       '7',
       '8',
+      '9',
     ]);
     expect(filterMatchesByTab(sample, 'solo').map((m) => m.id)).toEqual(['1']);
     expect(filterMatchesByTab(sample, 'flex').map((m) => m.id)).toEqual(['2']);
@@ -56,7 +58,7 @@ describe('Queue Tabs', () => {
       '5',
       '6',
     ]);
-    expect(filterMatchesByTab(sample, 'aram').map((m) => m.id)).toEqual(['7']);
+    expect(filterMatchesByTab(sample, 'aram').map((m) => m.id)).toEqual(['7', '9']);
   });
 });
 

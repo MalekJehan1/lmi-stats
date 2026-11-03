@@ -757,16 +757,8 @@ export class PrismaSummonerRepository implements SummonerRepository {
     const limit = options.limit ?? 20;
     const cursor = options.cursor;
 
-    const queueFilter =
-      tab === 'all'
-        ? undefined
-        : tab === 'solo'
-        ? { in: [420] }
-        : tab === 'flex'
-        ? { in: [440] }
-        : tab === 'normal'
-        ? { in: [400, 430, 480, 490] }
-        : { in: [450] };
+    const allowedQueues = QUEUE_TABS[tab];
+    const queueFilter = allowedQueues ? { in: allowedQueues } : undefined;
 
     const rows: Array<{
       match: {

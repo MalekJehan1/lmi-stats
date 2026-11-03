@@ -319,7 +319,6 @@ export class SyncService {
     const baseParams: GetMatchIdsParams = { count };
     if (tab === 'solo') baseParams.queue = 420;
     else if (tab === 'flex') baseParams.queue = 440;
-    else if (tab === 'aram') baseParams.queue = 450;
     else if (tab === 'normal') baseParams.type = 'normal';
 
     if (options.start !== undefined) {
@@ -367,6 +366,26 @@ export class SyncService {
           break;
         }
         currentStart += count;
+      }
+    } else if (tab === 'aram') {
+      const [ids450, ids2400] = await Promise.all([
+        this.riotClient.getMatchIds(regional, puuid, {
+          ...baseParams,
+          queue: 450,
+        }),
+        this.riotClient.getMatchIds(regional, puuid, {
+          ...baseParams,
+          queue: 2400,
+        }),
+      ]);
+      const pageIds = Array.from(new Set([...ids450, ...ids2400]));
+      rawReturnedCount = pageIds.length;
+      if (pageIds.length > 0) {
+        fetchedCount = await this.fetchAndSaveMissingMatches(
+          platform,
+          regional,
+          pageIds
+        );
       }
     } else {
       const pageIds = await this.riotClient.getMatchIds(

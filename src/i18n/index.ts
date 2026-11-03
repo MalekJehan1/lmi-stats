@@ -77,6 +77,8 @@ const QUEUE_NAMES: Record<number, string> = {
   480: 'Normal',
   490: 'Normal',
   450: 'ARAM',
+  720: 'ARAM Clash',
+  2400: 'ARAM: Desordem',
   700: 'Clash',
   900: 'URF',
   1700: 'Arena',
