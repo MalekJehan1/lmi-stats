@@ -346,9 +346,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Returns 20 matches for the selected tab and `hasMore` flag
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 70+ tests pass
+- [x] Returns 20 matches for the selected tab and `hasMore` flag
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 70+ tests pass
 
 **Tests**: integration
 **Gate**: full

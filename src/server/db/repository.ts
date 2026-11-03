@@ -650,7 +650,16 @@ export class PrismaSummonerRepository implements SummonerRepository {
     platform: string,
     puuid: string
   ): Promise<LeagueEntryData[]> {
-    const rows = await this.prisma.leagueEntry.findMany({
+    const rows: Array<{
+      puuid: string;
+      platform: string;
+      queueType: string;
+      tier: string;
+      rank: string;
+      leaguePoints: number;
+      wins: number;
+      losses: number;
+    }> = await this.prisma.leagueEntry.findMany({
       where: { puuid, platform: platform.toUpperCase() },
     });
     return rows.map((r) => ({
@@ -666,7 +675,7 @@ export class PrismaSummonerRepository implements SummonerRepository {
 
   async getExistingMatchIds(matchIds: string[]): Promise<Set<string>> {
     if (matchIds.length === 0) return new Set();
-    const rows = await this.prisma.match.findMany({
+    const rows: Array<{ matchId: string }> = await this.prisma.match.findMany({
       where: { matchId: { in: matchIds } },
       select: { matchId: true },
     });
@@ -759,7 +768,52 @@ export class PrismaSummonerRepository implements SummonerRepository {
         ? { in: [400, 430, 480, 490] }
         : { in: [450] };
 
-    const rows = await this.prisma.matchParticipant.findMany({
+    const rows: Array<{
+      match: {
+        matchId: string;
+        platform: string;
+        queueId: number;
+        gameStartTimestamp: bigint;
+        gameDuration: number;
+        gameVersion: string;
+        teams: Array<{
+          matchId: string;
+          teamId: number;
+          win: boolean;
+          kills: number;
+          towers: number;
+          dragons: number;
+          barons: number;
+        }>;
+        participants: Array<{
+          matchId: string;
+          puuid: string;
+          participantId: number;
+          teamId: number;
+          riotIdGameName: string;
+          riotIdTagline: string;
+          championId: number;
+          championName: string;
+          champLevel: number;
+          kills: number;
+          deaths: number;
+          assists: number;
+          cs: number;
+          goldEarned: number;
+          visionScore: number;
+          damageToChampions: number;
+          items: number[];
+          summoner1Id: number;
+          summoner2Id: number;
+          keystoneId: number;
+          secondaryStyleId: number;
+          win: boolean;
+          earlySurrender: boolean;
+          queueId: number;
+          gameStartTimestamp: bigint;
+        }>;
+      };
+    }> = await this.prisma.matchParticipant.findMany({
       where: {
         puuid,
         ...(queueFilter ? { queueId: queueFilter } : {}),
@@ -856,7 +910,19 @@ export class PrismaSummonerRepository implements SummonerRepository {
     puuid: string,
     seasonStartMs?: number
   ): Promise<ParticipantMatchRecord[]> {
-    const rows = await this.prisma.matchParticipant.findMany({
+    const rows: Array<{
+      championId: number;
+      championName: string;
+      kills: number;
+      deaths: number;
+      assists: number;
+      cs: number;
+      win: boolean;
+      earlySurrender: boolean;
+      queueId: number;
+      gameStartTimestamp: bigint;
+      match: { gameDuration: number };
+    }> = await this.prisma.matchParticipant.findMany({
       where: {
         puuid,
         ...(seasonStartMs !== undefined

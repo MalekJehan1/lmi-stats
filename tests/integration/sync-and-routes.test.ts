@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { InMemorySummonerRepository } from '@/server/db/repository';
+import {
+  InMemorySummonerRepository,
+  setRepository,
+  SummonerRepository,
+} from '@/server/db/repository';
 import {
   MatchDto,
   MatchParticipantDto,
@@ -12,6 +16,7 @@ import {
   getCooldownRemainingSeconds,
   RefreshGuard,
   RefreshRateLimitError,
+  setRefreshGuard,
 } from '@/server/sync/guards';
 import {
   PlayerNotFoundError,
@@ -21,11 +26,79 @@ import {
 } from '@/server/sync/sync-service';
 import {
   LookupTimeoutError,
+  setSyncDispatcher,
   SyncDispatcher,
   WorkerQueuePayload,
 } from '@/server/sync/dispatcher';
-import { createLookupHandler } from '@/app/api/summoners/[platform]/[slug]/route';
-import { createRefreshHandler } from '@/app/api/summoners/[platform]/[puuid]/refresh/route';
+import { GET as lookupGet } from '@/app/api/summoners/[platform]/[slug]/route';
+import { POST as refreshPost } from '@/app/api/summoners/[platform]/[puuid]/refresh/route';
+import { GET as matchesGet } from '@/app/api/summoners/[platform]/[puuid]/matches/route';
+
+function createLookupHandler(deps: {
+  repository: SummonerRepository;
+  dispatcher: SyncDispatcher;
+  timeoutMs?: number;
+}) {
+  return (
+    req: Request,
+    ctx: {
+      params:
+        | { platform: string; slug: string }
+        | Promise<{ platform: string; slug: string }>;
+    }
+  ) => {
+    setRepository(deps.repository);
+    if (deps.timeoutMs !== undefined) {
+      setSyncDispatcher(
+        new SyncDispatcher({
+          syncService: deps.dispatcher.getSyncService(),
+          defaultLookupTimeoutMs: deps.timeoutMs,
+        })
+      );
+    } else {
+      setSyncDispatcher(deps.dispatcher);
+    }
+    return lookupGet(req, ctx);
+  };
+}
+
+function createRefreshHandler(deps: {
+  repository: SummonerRepository;
+  dispatcher: SyncDispatcher;
+  guard: RefreshGuard;
+}) {
+  return (
+    req: Request,
+    ctx: {
+      params:
+        | { platform: string; puuid: string }
+        | Promise<{ platform: string; puuid: string }>;
+    }
+  ) => {
+    setRepository(deps.repository);
+    setSyncDispatcher(deps.dispatcher);
+    setRefreshGuard(deps.guard);
+    return refreshPost(req, ctx);
+  };
+}
+
+function createMatchesHandler(deps: {
+  repository: SummonerRepository;
+  syncService: SyncService;
+}) {
+  return (
+    req: Request,
+    ctx: {
+      params:
+        | { platform: string; puuid: string }
+        | Promise<{ platform: string; puuid: string }>;
+    }
+  ) => {
+    setRepository(deps.repository);
+    setSyncDispatcher(new SyncDispatcher({ syncService: deps.syncService }));
+    return matchesGet(req, ctx);
+  };
+}
 
 export function buildFakeMatchDto(
   matchId: string,
@@ -1374,6 +1447,150 @@ describe('Refresh and Guards', () => {
     expect(body.profile.summoner.gameName).toBe('SafePlayer');
   });
 });
+
+describe('Match Pagination', () => {
+  it('HIST-04 loads next 20 matches and fetches missing ones from Riot API', async () => {
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-hist',
+      platform: 'BR1',
+      gameName: 'HistoryPlayer',
+      tagLine: 'BR1',
+      profileIconId: 10,
+      summonerLevel: 100,
+    });
+
+    // Pre-save 5 of the 20 matches in the second page to verify only the 15 missing ones are fetched
+    const nextPageIds = Array.from({ length: 20 }, (_, i) => `BR1_${2020 + i}`);
+    for (let i = 0; i < 5; i++) {
+      await repo.upsertMatch(
+        'BR1',
+        buildFakeMatchDto(nextPageIds[i], {
+          ownerPuuid: 'puuid-hist',
+          queueId: 420,
+          gameStartTimestamp: DEFAULT_SEASON_START_MS + (500 - i) * 60_000,
+        })
+      );
+    }
+
+    const getMatchIdsSpy = vi.fn().mockResolvedValue(nextPageIds);
+    const getMatchSpy = vi
+      .fn()
+      .mockImplementation(async (_reg: string, id: string) => {
+        const idx = nextPageIds.indexOf(id);
+        return buildFakeMatchDto(id, {
+          ownerPuuid: 'puuid-hist',
+          queueId: 420,
+          gameStartTimestamp: DEFAULT_SEASON_START_MS + (500 - idx) * 60_000,
+        });
+      });
+
+    const riotClient = createMockRiotClient({
+      getMatchIds: getMatchIdsSpy,
+      getMatch: getMatchSpy,
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const handler = createMatchesHandler({ repository: repo, syncService });
+
+    const cursorTs = DEFAULT_SEASON_START_MS + 600 * 60_000;
+    const res = await handler(
+      new Request(
+        `http://localhost/api/summoners/BR1/puuid-hist/matches?tab=solo&cursor=${cursorTs}`
+      ),
+      { params: { platform: 'BR1', puuid: 'puuid-hist' } }
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.matches).toHaveLength(20);
+    expect(body.hasMore).toBe(true);
+    expect(body.fetchedCount).toBe(15);
+    expect(getMatchSpy).toHaveBeenCalledTimes(15);
+    expect(body.matches[0].matchId).toBe('BR1_2020');
+    expect(body.matches[19].matchId).toBe('BR1_2039');
+  });
+
+  it('filters saved matches by queue tab ordered newest to oldest (HIST-01, HIST-03)', async () => {
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertMatch(
+      'BR1',
+      buildFakeMatchDto('BR1_ARAM_1', {
+        ownerPuuid: 'puuid-tabs',
+        queueId: 450,
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + 10_000,
+      })
+    );
+    await repo.upsertMatch(
+      'BR1',
+      buildFakeMatchDto('BR1_SOLO_1', {
+        ownerPuuid: 'puuid-tabs',
+        queueId: 420,
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + 20_000,
+      })
+    );
+    await repo.upsertMatch(
+      'BR1',
+      buildFakeMatchDto('BR1_ARAM_2', {
+        ownerPuuid: 'puuid-tabs',
+        queueId: 450,
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + 30_000,
+      })
+    );
+
+    const syncService = new SyncService({
+      riotClient: createMockRiotClient(),
+      repository: repo,
+    });
+    const handler = createMatchesHandler({ repository: repo, syncService });
+
+    const res = await handler(
+      new Request(
+        'http://localhost/api/summoners/BR1/puuid-tabs/matches?tab=aram'
+      ),
+      { params: { platform: 'BR1', puuid: 'puuid-tabs' } }
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.matches).toHaveLength(2);
+    expect(body.matches[0].matchId).toBe('BR1_ARAM_2');
+    expect(body.matches[1].matchId).toBe('BR1_ARAM_1');
+  });
+
+  it('returns hasMore false when Riot API returns fewer than 20 matches on loadMore (HIST-05)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_LAST_1', 'BR1_LAST_2']),
+      getMatch: vi.fn().mockImplementation(async (_reg: string, id: string) =>
+        buildFakeMatchDto(id, {
+          ownerPuuid: 'puuid-end',
+          queueId: 440,
+          gameStartTimestamp:
+            id === 'BR1_LAST_1'
+              ? DEFAULT_SEASON_START_MS + 20_000
+              : DEFAULT_SEASON_START_MS + 10_000,
+        })
+      ),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const handler = createMatchesHandler({ repository: repo, syncService });
+
+    const cursorTs = DEFAULT_SEASON_START_MS + 50_000;
+    const res = await handler(
+      new Request(
+        `http://localhost/api/summoners/BR1/puuid-end/matches?tab=flex&cursor=${cursorTs}`
+      ),
+      { params: { platform: 'BR1', puuid: 'puuid-end' } }
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.matches).toHaveLength(2);
+    expect(body.hasMore).toBe(false);
+    expect(body.nextCursor).toBeNull();
+  });
+});
+
 
 
 

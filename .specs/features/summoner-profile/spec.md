@@ -260,11 +260,11 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | REFR-07 | P1: Atualizar dados | Phase 2 (T14), Phase 3 (T17) | In Progress (T14 done) |
 | REFR-08 | P1: Atualizar dados | Phase 2 (T11, T14), Phase 3 (T17) | In Progress (T11, T14 done) |
 | REFR-09 | P1: Atualizar dados | Phase 2 (T11, T14) | Verified |
-| HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11 done) |
+| HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11, T15 done) |
 | HIST-02 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
-| HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | In Progress (T8 done) |
-| HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11 done) |
-| HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11 done) |
+| HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | In Progress (T8, T15 done) |
+| HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11, T15 done) |
+| HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11, T15 done) |
 | HIST-06 | P1: Histórico | Phase 3 (T20) | In Tasks |
 | HIST-07 | P1: Histórico | Phase 3 (T20) | In Tasks |
 | HIST-08 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
