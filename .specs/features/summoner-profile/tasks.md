@@ -460,9 +460,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Home and Summoner Profile pages render all states and responsive classes (`overflow-x-hidden`, responsive grid)
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 103+ tests pass
+- [x] Home and Summoner Profile pages render all states and responsive classes (`overflow-x-hidden`, responsive grid)
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 103+ tests pass
 
 **Tests**: unit
 **Gate**: quick

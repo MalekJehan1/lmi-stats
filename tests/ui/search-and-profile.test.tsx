@@ -7,6 +7,8 @@ import {
   RankedCards,
   RefreshButton,
 } from '@/components/ProfileHeader';
+import HomePage from '@/app/page';
+import { SummonerProfileView } from '@/app/[platform]/summoner/[slug]/page';
 import { PLATFORMS } from '@/server/riot/routing';
 import { metadata } from '@/app/layout';
 import { SummonerProfileData } from '@/server/db/repository';
@@ -156,6 +158,29 @@ describe('Branding and Legal', () => {
     const header = screen.getByTestId('app-header');
     expect(header.textContent).toContain('LMI Stats');
     expect(metadata.title).toBe('LMI Stats');
+  });
+
+  it('RESP-01 applies responsive layout without horizontal page overflow', () => {
+    const profile = createSampleProfile();
+    const { unmount } = render(<HomePage />);
+    const homeContainer = screen.getByTestId('home-page');
+    expect(homeContainer.className).toContain('overflow-x-hidden');
+    unmount();
+
+    render(
+      <SummonerProfileView
+        platform="BR1"
+        slug="Kami-BR1"
+        initialProfile={profile}
+        nowMs={1_750_000_000_000}
+      />
+    );
+
+    const profilePage = screen.getByTestId('summoner-profile-page');
+    expect(profilePage.className).toContain('overflow-x-hidden');
+    const grid = screen.getByTestId('profile-responsive-grid');
+    expect(grid.className).toContain('grid-cols-1');
+    expect(grid.className).toContain('lg:grid-cols-12');
   });
 });
 
@@ -422,6 +447,103 @@ describe('RefreshButton', () => {
     expect(screen.getByTestId('summoner-level').textContent).toBe('Nível 412');
     expect(screen.getByTestId('ranked-card-solo').textContent).toContain(
       '1125 PdL'
+    );
+
+    fetchSpy.mockRestore();
+  });
+});
+
+describe('Profile states', () => {
+  it('SRCH-07 displays Jogador não encontrado with Riot ID and region', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'not_found',
+          message: 'Jogador não encontrado',
+          riotId: 'GhostPlayer#BR1',
+          platform: 'BR1',
+        }),
+        { status: 404 }
+      )
+    );
+
+    render(<SummonerProfileView platform="BR1" slug="GhostPlayer-BR1" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-state-not_found')).toBeTruthy();
+    });
+
+    const container = screen.getByTestId('profile-state-not_found');
+    expect(container.textContent).toContain('Jogador não encontrado');
+    expect(screen.getByTestId('searched-riot-id').textContent).toBe(
+      'GhostPlayer#BR1'
+    );
+    expect(screen.getByTestId('searched-region').textContent).toBe('BR1');
+
+    fetchSpy.mockRestore();
+  });
+
+  it('SRCH-08 displays Jogador não encontrado nesta região', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'not_in_region',
+          message: 'Jogador não encontrado nesta região',
+          riotId: 'Hide on bush#KR1',
+          platform: 'BR1',
+        }),
+        { status: 404 }
+      )
+    );
+
+    render(
+      <SummonerProfileView platform="BR1" slug="Hide%20on%20bush-KR1" />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-state-not_in_region')).toBeTruthy();
+    });
+
+    expect(
+      screen.getByTestId('profile-state-not_in_region').textContent
+    ).toContain('Jogador não encontrado nesta região');
+
+    fetchSpy.mockRestore();
+  });
+
+  it('SRCH-09 displays loading skeleton while lookup is in progress', () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () => new Promise<Response>(() => {})
+    );
+
+    render(<SummonerProfileView platform="BR1" slug="Kami-BR1" />);
+
+    const skeleton = screen.getByTestId('profile-loading-skeleton');
+    expect(skeleton).toBeTruthy();
+    expect(skeleton.textContent).toContain('Buscando dados do jogador...');
+
+    fetchSpy.mockRestore();
+  });
+
+  it('SRCH-10 displays timeout message when lookup exceeds 30s', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () => new Promise<Response>(() => {})
+    );
+
+    render(
+      <SummonerProfileView
+        platform="BR1"
+        slug="SlowPlayer-BR1"
+        lookupTimeoutMs={20}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-state-timeout')).toBeTruthy();
+    });
+
+    expect(screen.getByTestId('profile-state-timeout').textContent).toContain(
+      'Muitas buscas no momento. Tente novamente em instantes.'
     );
 
     fetchSpy.mockRestore();

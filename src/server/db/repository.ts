@@ -1018,9 +1018,249 @@ export class PrismaSummonerRepository implements SummonerRepository {
 
 let defaultRepoInstance: SummonerRepository | null = null;
 
+function buildDemoMatchDto(
+  matchId: string,
+  options: {
+    platform: string;
+    queueId: number;
+    gameStartTimestamp: number;
+    gameDuration: number;
+    ownerPuuid: string;
+    ownerName: string;
+    ownerTag: string;
+    ownerChampion: string;
+    ownerWin: boolean;
+    kills: number;
+    deaths: number;
+    assists: number;
+    earlySurrender?: boolean;
+  }
+): MatchDto {
+  const roster = [
+    'Ahri',
+    'LeeSin',
+    'Jinx',
+    'Thresh',
+    'Renekton',
+    'Orianna',
+    'Viego',
+    'KaiSa',
+    'Nautilus',
+    'Aatrox',
+  ];
+  const participants: MatchParticipantDto[] = Array.from(
+    { length: 10 },
+    (_, idx) => {
+      const isBlue = idx < 5;
+      const isOwner = idx === 0;
+      return {
+        participantId: idx + 1,
+        puuid: isOwner ? options.ownerPuuid : `puuid-${matchId}-${idx + 1}`,
+        teamId: isBlue ? 100 : 200,
+        riotIdGameName: isOwner
+          ? options.ownerName
+          : idx === 1
+          ? 'brTT'
+          : `Jogador${idx + 1}`,
+        riotIdTagline: isOwner
+          ? options.ownerTag
+          : idx === 1
+          ? 'REX'
+          : options.platform,
+        championId: 100 + idx,
+        championName: isOwner ? options.ownerChampion : roster[idx],
+        champLevel: isOwner ? 18 : 15,
+        kills: isOwner ? options.kills : 4,
+        deaths: isOwner ? options.deaths : 5,
+        assists: isOwner ? options.assists : 7,
+        totalMinionsKilled: isOwner ? 210 : 165,
+        neutralMinionsKilled: isOwner ? 24 : 15,
+        goldEarned: isOwner ? 15800 : 11900,
+        visionScore: isOwner ? 38 : 24,
+        totalDamageDealtToChampions: isOwner
+          ? 36000
+          : idx === 1
+          ? 24000
+          : 15000,
+        item0: 3157,
+        item1: 3020,
+        item2: 3089,
+        item3: 3135,
+        item4: 3165,
+        item5: 3102,
+        item6: 3340,
+        summoner1Id: 4,
+        summoner2Id: 14,
+        perks: {
+          styles: [
+            { style: 8100, selections: [{ perk: 8112 }] },
+            { style: 8200, selections: [{ perk: 8210 }] },
+          ],
+        },
+        win: isBlue ? options.ownerWin : !options.ownerWin,
+        gameEndedInEarlySurrender: Boolean(options.earlySurrender),
+      };
+    }
+  );
+
+  return {
+    metadata: {
+      matchId,
+      participants: participants.map((p) => p.puuid),
+    },
+    info: {
+      gameStartTimestamp: options.gameStartTimestamp,
+      gameDuration: options.gameDuration,
+      gameVersion: '14.22.1',
+      queueId: options.queueId,
+      platformId: options.platform,
+      participants,
+      teams: [
+        {
+          teamId: 100,
+          win: options.ownerWin,
+          objectives: {
+            champion: { kills: 28 },
+            tower: { kills: 9 },
+            dragon: { kills: 3 },
+            baron: { kills: 1 },
+          },
+        },
+        {
+          teamId: 200,
+          win: !options.ownerWin,
+          objectives: {
+            champion: { kills: 19 },
+            tower: { kills: 3 },
+            dragon: { kills: 1 },
+            baron: { kills: 0 },
+          },
+        },
+      ],
+    },
+  };
+}
+
+export function seedDemoRepository(repo: InMemorySummonerRepository): void {
+  const now = Date.now();
+  const kamiPuuid = 'demo-puuid-kami-br1';
+  const fakerPuuid = 'demo-puuid-faker-kr';
+
+  void repo.upsertSummoner({
+    puuid: kamiPuuid,
+    platform: 'BR1',
+    gameName: 'Kami',
+    tagLine: 'BR1',
+    profileIconId: 29,
+    summonerLevel: 412,
+    lastUpdatedAt: new Date(now - 5 * 60_000),
+  });
+  void repo.replaceLeagueEntries('BR1', kamiPuuid, [
+    {
+      queueType: 'RANKED_SOLO_5x5',
+      tier: 'CHALLENGER',
+      rank: 'I',
+      leaguePoints: 1125,
+      wins: 142,
+      losses: 95,
+    },
+    {
+      queueType: 'RANKED_FLEX_SR',
+      tier: 'MASTER',
+      rank: 'I',
+      leaguePoints: 340,
+      wins: 38,
+      losses: 22,
+    },
+  ]);
+
+  const championsPool = [
+    'Ahri',
+    'Orianna',
+    'Syndra',
+    'LeBlanc',
+    'Azir',
+    'TwistedFate',
+    'Viktor',
+    'Taliyah',
+    'Lux',
+  ];
+
+  // 25 matches for Kami#BR1 across Solo (420), Flex (440), Normal (400) and ARAM (450)
+  for (let i = 0; i < 25; i++) {
+    const champ = championsPool[i % championsPool.length];
+    const queueId =
+      i < 16 ? 420 : i < 20 ? 440 : i < 23 ? 400 : 450;
+    const isZeroDeath = i === 0;
+    const isRemakeMatch = i === 2;
+    void repo.upsertMatch(
+      'BR1',
+      buildDemoMatchDto(`BR1_DEMO_${1000 + i}`, {
+        platform: 'BR1',
+        queueId,
+        gameStartTimestamp: now - (i + 1) * 3600_000,
+        gameDuration: isRemakeMatch ? 195 : 1820,
+        ownerPuuid: kamiPuuid,
+        ownerName: 'Kami',
+        ownerTag: 'BR1',
+        ownerChampion: champ,
+        ownerWin: i % 3 !== 1,
+        kills: isZeroDeath ? 12 : 8 + (i % 5),
+        deaths: isZeroDeath ? 0 : 2 + (i % 4),
+        assists: 9 + (i % 6),
+        earlySurrender: isRemakeMatch,
+      })
+    );
+  }
+
+  // Second demo summoner: Faker#T1 on KR (Solo ranked, Flex unranked)
+  void repo.upsertSummoner({
+    puuid: fakerPuuid,
+    platform: 'KR',
+    gameName: 'Faker',
+    tagLine: 'T1',
+    profileIconId: 6,
+    summonerLevel: 785,
+    lastUpdatedAt: new Date(now - 10 * 60_000),
+  });
+  void repo.replaceLeagueEntries('KR', fakerPuuid, [
+    {
+      queueType: 'RANKED_SOLO_5x5',
+      tier: 'CHALLENGER',
+      rank: 'I',
+      leaguePoints: 1490,
+      wins: 190,
+      losses: 120,
+    },
+  ]);
+  for (let i = 0; i < 5; i++) {
+    void repo.upsertMatch(
+      'KR',
+      buildDemoMatchDto(`KR_DEMO_${2000 + i}`, {
+        platform: 'KR',
+        queueId: 420,
+        gameStartTimestamp: now - (i + 1) * 3600_000,
+        gameDuration: 1750,
+        ownerPuuid: fakerPuuid,
+        ownerName: 'Faker',
+        ownerTag: 'T1',
+        ownerChampion: championsPool[i],
+        ownerWin: true,
+        kills: 10,
+        deaths: 1,
+        assists: 11,
+      })
+    );
+  }
+}
+
 export function getRepository(): SummonerRepository {
   if (!defaultRepoInstance) {
-    defaultRepoInstance = new InMemorySummonerRepository();
+    const repo = new InMemorySummonerRepository();
+    if (process.env.SEED_DEMO_DATA !== 'false') {
+      seedDemoRepository(repo);
+    }
+    defaultRepoInstance = repo;
   }
   return defaultRepoInstance;
 }
