@@ -213,9 +213,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] All formulas, remake exclusion, `SEASON_START` filter, sorting by games desc then winrate desc, and top-7 slicing work accurately
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 35+ tests pass
+- [x] All formulas, remake exclusion, `SEASON_START` filter, sorting by games desc then winrate desc, and top-7 slicing work accurately
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 35+ tests pass
 
 **Tests**: unit
 **Gate**: quick

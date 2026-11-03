@@ -248,7 +248,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | SRCH-09 | P1: Buscar jogador | Phase 3 (T21) | In Tasks |
 | SRCH-10 | P1: Buscar jogador | Phase 2 (T12, T13), Phase 3 (T21) | In Tasks |
 | PROF-01 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
-| PROF-02 | P1: Perfil e elos | Phase 1 (T8), Phase 3 (T17) | In Tasks |
+| PROF-02 | P1: Perfil e elos | Phase 1 (T8), Phase 3 (T17) | In Progress (T8 done) |
 | PROF-03 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
 | PROF-04 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
 | REFR-01 | P1: Atualizar dados | Phase 2 (T11, T14) | In Tasks |
@@ -261,15 +261,15 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | REFR-08 | P1: Atualizar dados | Phase 2 (T11, T14), Phase 3 (T17) | In Tasks |
 | REFR-09 | P1: Atualizar dados | Phase 2 (T11, T14) | In Tasks |
 | HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Tasks |
-| HIST-02 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Tasks |
-| HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | In Tasks |
+| HIST-02 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
+| HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | In Progress (T8 done) |
 | HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Tasks |
 | HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Tasks |
 | HIST-06 | P1: Histórico | Phase 3 (T20) | In Tasks |
 | HIST-07 | P1: Histórico | Phase 3 (T20) | In Tasks |
-| HIST-08 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Tasks |
-| HIST-09 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Tasks |
-| HIST-10 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Tasks |
+| HIST-08 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
+| HIST-09 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
+| HIST-10 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
 | MATCH-01 | P1: Detalhe da partida | Phase 3 (T20) | In Tasks |
 | MATCH-02 | P1: Detalhe da partida | Phase 3 (T20) | In Tasks |
 | MATCH-03 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
@@ -278,14 +278,14 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | MATCH-06 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
 | MATCH-07 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
 | MATCH-08 | P1: Detalhe da partida | Phase 2 (T9), Phase 3 (T19) | In Tasks |
-| CHMP-01 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
-| CHMP-02 | P1: Estatísticas por campeão | Phase 1 (T8) | In Tasks |
-| CHMP-03 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
-| CHMP-04 | P1: Estatísticas por campeão | Phase 1 (T8) | In Tasks |
-| CHMP-05 | P1: Estatísticas por campeão | Phase 1 (T8) | In Tasks |
-| CHMP-06 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
-| CHMP-07 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
-| CHMP-08 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Tasks |
+| CHMP-01 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-02 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
+| CHMP-03 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-04 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
+| CHMP-05 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
+| CHMP-06 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-07 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-08 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
 | RIOT-01 | P1: Integração Riot API | Phase 1 (T5), Phase 3 (T22) | In Progress (T5 done) |
 | RIOT-02 | P1: Integração Riot API | Phase 1 (T5, T6) | Verified |
 | RIOT-03 | P1: Integração Riot API | Phase 1 (T6) | Verified |
