@@ -384,9 +384,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Renders profile identity, relative timestamp, Solo/Flex cards (`Unranked` when absent), and refresh button states (idle, `"Atualizando..."`, cooldown seconds, error alert)
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 81+ tests pass
+- [x] Renders profile identity, relative timestamp, Solo/Flex cards (`Unranked` when absent), and refresh button states (idle, `"Atualizando..."`, cooldown seconds, error alert)
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 81+ tests pass
 
 **Tests**: unit
 **Gate**: quick
