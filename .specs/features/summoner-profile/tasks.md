@@ -118,9 +118,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Exports `PLATFORMS`, `DEFAULT_PLATFORM = 'BR1'`, `isPlatform`, and `regionalOf`
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 5+ tests pass
+- [x] Exports `PLATFORMS`, `DEFAULT_PLATFORM = 'BR1'`, `isPlatform`, and `regionalOf`
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 5+ tests pass
 
 **Tests**: unit
 **Gate**: quick

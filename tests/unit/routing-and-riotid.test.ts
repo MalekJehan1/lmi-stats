@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { t, ptBR, getQueueName, formatRelativeTime } from '@/i18n';
+import {
+  PLATFORMS,
+  DEFAULT_PLATFORM,
+  isPlatform,
+  regionalOf,
+  normalizePlatform,
+} from '@/server/riot/routing';
 
 describe('i18n', () => {
   it('I18N-01 resolves all UI copy from pt-BR catalog', () => {
@@ -45,3 +52,55 @@ describe('i18n', () => {
     expect(formatRelativeTime(now - 2 * 3600 * 1000, now)).toBe('há 2 horas');
   });
 });
+
+describe('Routing', () => {
+  it('SRCH-02 defaults to BR1 and lists all 15 Riot platforms', () => {
+    expect(DEFAULT_PLATFORM).toBe('BR1');
+    expect(PLATFORMS).toEqual([
+      'BR1',
+      'NA1',
+      'LA1',
+      'LA2',
+      'EUW1',
+      'EUN1',
+      'TR1',
+      'RU',
+      'ME1',
+      'KR',
+      'JP1',
+      'OC1',
+      'SG2',
+      'TW2',
+      'VN2',
+    ]);
+    expect(PLATFORMS).toHaveLength(15);
+  });
+
+  it('maps each platform to its regional cluster', () => {
+    expect(regionalOf('BR1')).toBe('americas');
+    expect(regionalOf('NA1')).toBe('americas');
+    expect(regionalOf('LA1')).toBe('americas');
+    expect(regionalOf('LA2')).toBe('americas');
+    expect(regionalOf('EUW1')).toBe('europe');
+    expect(regionalOf('EUN1')).toBe('europe');
+    expect(regionalOf('TR1')).toBe('europe');
+    expect(regionalOf('RU')).toBe('europe');
+    expect(regionalOf('ME1')).toBe('europe');
+    expect(regionalOf('KR')).toBe('asia');
+    expect(regionalOf('JP1')).toBe('asia');
+    expect(regionalOf('OC1')).toBe('sea');
+    expect(regionalOf('SG2')).toBe('sea');
+    expect(regionalOf('TW2')).toBe('sea');
+    expect(regionalOf('VN2')).toBe('sea');
+  });
+
+  it('validates and normalizes platform identifiers', () => {
+    expect(isPlatform('BR1')).toBe(true);
+    expect(isPlatform('KR')).toBe(true);
+    expect(isPlatform('INVALID')).toBe(false);
+    expect(normalizePlatform('br1')).toBe('BR1');
+    expect(normalizePlatform('euw1')).toBe('EUW1');
+    expect(normalizePlatform('xyz')).toBeNull();
+  });
+});
+
