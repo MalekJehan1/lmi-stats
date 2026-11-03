@@ -327,9 +327,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Returns 429 on cooldown or IP limit, 503 with preserved data on Riot failure, and 200 with updated profile and new slug on Riot ID change
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 67+ tests pass
+- [x] Returns 429 on cooldown or IP limit, 503 with preserved data on Riot failure, and 200 with updated profile and new slug on Riot ID change
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 67+ tests pass
 
 **Tests**: integration
 **Gate**: full

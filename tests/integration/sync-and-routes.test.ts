@@ -25,6 +25,7 @@ import {
   WorkerQueuePayload,
 } from '@/server/sync/dispatcher';
 import { createLookupHandler } from '@/app/api/summoners/[platform]/[slug]/route';
+import { createRefreshHandler } from '@/app/api/summoners/[platform]/[puuid]/refresh/route';
 
 export function buildFakeMatchDto(
   matchId: string,
@@ -1005,6 +1006,375 @@ describe('Lookup and Sync', () => {
     );
   });
 });
+
+describe('Refresh and Guards', () => {
+  it('REFR-01 fetches profile, leagues and up to 100 new matches since last saved', async () => {
+    const now = 1_750_000_000_000;
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-ref-1',
+      platform: 'BR1',
+      gameName: 'RefreshUser',
+      tagLine: 'BR1',
+      profileIconId: 10,
+      summonerLevel: 100,
+      lastUpdatedAt: new Date(now - 300_000), // 5 min ago (outside cooldown)
+    });
+    await repo.upsertMatch(
+      'BR1',
+      buildFakeMatchDto('BR1_3003', {
+        ownerPuuid: 'puuid-ref-1',
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + 10_000,
+      })
+    );
+
+    const getMatchIdsSpy = vi
+      .fn()
+      .mockResolvedValue(['BR1_3001', 'BR1_3002', 'BR1_3003', 'BR1_3004']);
+    const getMatchSpy = vi
+      .fn()
+      .mockImplementation(async (_reg: string, id: string) => {
+        const num = Number(id.split('_')[1] || 0);
+        return buildFakeMatchDto(id, {
+          ownerPuuid: 'puuid-ref-1',
+          gameStartTimestamp: DEFAULT_SEASON_START_MS + (4000 - num) * 60_000,
+        });
+      });
+
+    const riotClient = createMockRiotClient({
+      getAccountByPuuid: vi.fn().mockResolvedValue({
+        puuid: 'puuid-ref-1',
+        gameName: 'RefreshUser',
+        tagLine: 'BR1',
+      }),
+      getSummonerByPuuid: vi.fn().mockResolvedValue({
+        puuid: 'puuid-ref-1',
+        profileIconId: 12,
+        summonerLevel: 102,
+      }),
+      getMatchIds: getMatchIdsSpy,
+      getMatch: getMatchSpy,
+    });
+
+    const syncService = new SyncService({
+      riotClient,
+      repository: repo,
+      now: () => new Date(now),
+    });
+    const dispatcher = new SyncDispatcher({ syncService, now: () => now });
+    const guard = new RefreshGuard({ now: () => now });
+    const handler = createRefreshHandler({
+      repository: repo,
+      dispatcher,
+      guard,
+    });
+
+    const res = await handler(
+      new Request('http://localhost/api/summoners/BR1/puuid-ref-1/refresh', {
+        method: 'POST',
+      }),
+      { params: { platform: 'BR1', puuid: 'puuid-ref-1' } }
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(getMatchIdsSpy).toHaveBeenCalledWith('americas', 'puuid-ref-1', {
+      count: 100,
+    });
+    expect(getMatchSpy).toHaveBeenCalledTimes(2); // BR1_3001 and BR1_3002 only
+    expect(body.newMatchesFetched).toBe(2);
+    expect(body.profile.summoner.summonerLevel).toBe(102);
+    expect(body.profile.matches).toHaveLength(3);
+  });
+
+  it('REFR-04 returns HTTP 429 during cooldown without calling Riot API', async () => {
+    const now = 1_750_000_000_000;
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-cooldown',
+      platform: 'BR1',
+      gameName: 'CooldownUser',
+      tagLine: 'BR1',
+      profileIconId: 10,
+      summonerLevel: 100,
+      lastUpdatedAt: new Date(now - 30_000), // Updated 30s ago -> 90s remaining
+    });
+
+    const getAccountByPuuidSpy = vi.fn();
+    const getSummonerSpy = vi.fn();
+    const riotClient = createMockRiotClient({
+      getAccountByPuuid: getAccountByPuuidSpy,
+      getSummonerByPuuid: getSummonerSpy,
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const guard = new RefreshGuard({ now: () => now });
+    const handler = createRefreshHandler({
+      repository: repo,
+      dispatcher,
+      guard,
+    });
+
+    const res = await handler(
+      new Request(
+        'http://localhost/api/summoners/BR1/puuid-cooldown/refresh',
+        { method: 'POST' }
+      ),
+      { params: { platform: 'BR1', puuid: 'puuid-cooldown' } }
+    );
+
+    expect(res.status).toBe(429);
+    const body = await res.json();
+    expect(body.reason).toBe('cooldown');
+    expect(body.retryAfterSeconds).toBe(90);
+    expect(getAccountByPuuidSpy).not.toHaveBeenCalled();
+    expect(getSummonerSpy).not.toHaveBeenCalled();
+  });
+
+  it('REFR-05 returns HTTP 429 when IP exceeds 10 refreshes per minute', async () => {
+    const now = 1_750_000_000_000;
+    const repo = new InMemorySummonerRepository();
+    const getSummonerSpy = vi.fn().mockResolvedValue({
+      puuid: 'puuid-ip-test',
+      profileIconId: 1,
+      summonerLevel: 50,
+    });
+    const riotClient = createMockRiotClient({
+      getSummonerByPuuid: getSummonerSpy,
+      getMatchIds: vi.fn().mockResolvedValue([]),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const guard = new RefreshGuard({ now: () => now });
+    const handler = createRefreshHandler({
+      repository: repo,
+      dispatcher,
+      guard,
+    });
+
+    for (let i = 0; i < 10; i++) {
+      const puuid = `puuid-ip-${i}`;
+      await repo.upsertSummoner({
+        puuid,
+        platform: 'BR1',
+        gameName: `Player${i}`,
+        tagLine: 'BR1',
+        profileIconId: 1,
+        summonerLevel: 50,
+        lastUpdatedAt: new Date(now - 300_000),
+      });
+      const r = await handler(
+        new Request(`http://localhost/api/summoners/BR1/${puuid}/refresh`, {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '198.51.100.42' },
+        }),
+        { params: { platform: 'BR1', puuid } }
+      );
+      expect(r.status).toBe(200);
+    }
+
+    getSummonerSpy.mockClear();
+
+    await repo.upsertSummoner({
+      puuid: 'puuid-ip-11',
+      platform: 'BR1',
+      gameName: 'Player11',
+      tagLine: 'BR1',
+      profileIconId: 1,
+      summonerLevel: 50,
+      lastUpdatedAt: new Date(now - 300_000),
+    });
+
+    const blockedRes = await handler(
+      new Request('http://localhost/api/summoners/BR1/puuid-ip-11/refresh', {
+        method: 'POST',
+        headers: { 'x-forwarded-for': '198.51.100.42' },
+      }),
+      { params: { platform: 'BR1', puuid: 'puuid-ip-11' } }
+    );
+
+    expect(blockedRes.status).toBe(429);
+    const body = await blockedRes.json();
+    expect(body.reason).toBe('ip_limit');
+    expect(body.retryAfterSeconds).toBeGreaterThan(0);
+    expect(getSummonerSpy).not.toHaveBeenCalled();
+  });
+
+  it('REFR-06 deduplicates concurrent refreshes for the same player', async () => {
+    const now = 1_750_000_000_000;
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-dedupe',
+      platform: 'BR1',
+      gameName: 'DedupePlayer',
+      tagLine: 'BR1',
+      profileIconId: 10,
+      summonerLevel: 200,
+      lastUpdatedAt: new Date(now - 300_000),
+    });
+
+    const getSummonerSpy = vi.fn().mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 30));
+      return {
+        puuid: 'puuid-dedupe',
+        profileIconId: 15,
+        summonerLevel: 205,
+      };
+    });
+    const riotClient = createMockRiotClient({
+      getAccountByPuuid: vi.fn().mockResolvedValue({
+        puuid: 'puuid-dedupe',
+        gameName: 'DedupePlayer',
+        tagLine: 'BR1',
+      }),
+      getSummonerByPuuid: getSummonerSpy,
+      getMatchIds: vi.fn().mockResolvedValue([]),
+    });
+
+    const syncService = new SyncService({
+      riotClient,
+      repository: repo,
+      now: () => new Date(now),
+    });
+    const dispatcher = new SyncDispatcher({ syncService, now: () => now });
+    const guard = new RefreshGuard({ now: () => now });
+    const handler = createRefreshHandler({
+      repository: repo,
+      dispatcher,
+      guard,
+    });
+
+    const [res1, res2] = await Promise.all([
+      handler(
+        new Request(
+          'http://localhost/api/summoners/BR1/puuid-dedupe/refresh',
+          { method: 'POST', headers: { 'x-forwarded-for': '10.1.1.1' } }
+        ),
+        { params: { platform: 'BR1', puuid: 'puuid-dedupe' } }
+      ),
+      handler(
+        new Request(
+          'http://localhost/api/summoners/BR1/puuid-dedupe/refresh',
+          { method: 'POST', headers: { 'x-forwarded-for': '10.1.1.2' } }
+        ),
+        { params: { platform: 'BR1', puuid: 'puuid-dedupe' } }
+      ),
+    ]);
+
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(200);
+    const [b1, b2] = await Promise.all([res1.json(), res2.json()]);
+    expect(getSummonerSpy).toHaveBeenCalledTimes(1);
+    expect(b1.jobId).toBe(b2.jobId);
+    expect(b1.profile.summoner.summonerLevel).toBe(205);
+    expect(b2.profile.summoner.summonerLevel).toBe(205);
+  });
+
+  it('REFR-09 updates stored Riot ID and returns new slug when player renamed', async () => {
+    const now = 1_750_000_000_000;
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-rename',
+      platform: 'BR1',
+      gameName: 'OldNick',
+      tagLine: 'BR1',
+      profileIconId: 10,
+      summonerLevel: 300,
+      lastUpdatedAt: new Date(now - 300_000),
+    });
+
+    const riotClient = createMockRiotClient({
+      getAccountByPuuid: vi.fn().mockResolvedValue({
+        puuid: 'puuid-rename',
+        gameName: 'NewNick',
+        tagLine: 'KING',
+      }),
+      getSummonerByPuuid: vi.fn().mockResolvedValue({
+        puuid: 'puuid-rename',
+        profileIconId: 10,
+        summonerLevel: 301,
+      }),
+      getMatchIds: vi.fn().mockResolvedValue([]),
+    });
+    const syncService = new SyncService({
+      riotClient,
+      repository: repo,
+      now: () => new Date(now),
+    });
+    const dispatcher = new SyncDispatcher({ syncService, now: () => now });
+    const guard = new RefreshGuard({ now: () => now });
+    const handler = createRefreshHandler({
+      repository: repo,
+      dispatcher,
+      guard,
+    });
+
+    const res = await handler(
+      new Request('http://localhost/api/summoners/BR1/puuid-rename/refresh', {
+        method: 'POST',
+      }),
+      { params: { platform: 'BR1', puuid: 'puuid-rename' } }
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.renamed).toBe(true);
+    expect(body.previousSlug).toBe('OldNick-BR1');
+    expect(body.newSlug).toBe('NewNick-KING');
+    expect(body.profile.summoner.gameName).toBe('NewNick');
+    expect(body.profile.summoner.tagLine).toBe('KING');
+
+    const byNewRiotId = await repo.findSummonerByRiotId(
+      'BR1',
+      'newnick',
+      'king'
+    );
+    expect(byNewRiotId?.puuid).toBe('puuid-rename');
+  });
+
+  it('returns 503 with preserved profile data when Riot API fails during refresh (REFR-08)', async () => {
+    const now = 1_750_000_000_000;
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-fail-ref',
+      platform: 'BR1',
+      gameName: 'SafePlayer',
+      tagLine: 'BR1',
+      profileIconId: 9,
+      summonerLevel: 150,
+      lastUpdatedAt: new Date(now - 300_000),
+    });
+
+    const riotClient = createMockRiotClient({
+      getSummonerByPuuid: vi
+        .fn()
+        .mockRejectedValue(new RiotUnavailableError('Riot down')),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const guard = new RefreshGuard({ now: () => now });
+    const handler = createRefreshHandler({
+      repository: repo,
+      dispatcher,
+      guard,
+    });
+
+    const res = await handler(
+      new Request('http://localhost/api/summoners/BR1/puuid-fail-ref/refresh', {
+        method: 'POST',
+      }),
+      { params: { platform: 'BR1', puuid: 'puuid-fail-ref' } }
+    );
+
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.message).toBe(
+      'Não foi possível atualizar agora. Tente novamente em instantes.'
+    );
+    expect(body.profile.summoner.gameName).toBe('SafePlayer');
+  });
+});
+
 
 
 
