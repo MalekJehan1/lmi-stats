@@ -24,6 +24,7 @@ import {
   SyncDispatcher,
   WorkerQueuePayload,
 } from '@/server/sync/dispatcher';
+import { createLookupHandler } from '@/app/api/summoners/[platform]/[slug]/route';
 
 export function buildFakeMatchDto(
   matchId: string,
@@ -782,6 +783,229 @@ describe('SyncDispatcher Unit', () => {
     expect(status?.error).toBe('not_found');
   });
 });
+
+describe('Lookup and Sync', () => {
+  it('SRCH-04 fetches account, summoner, leagues and 20 matches and saves to DB', async () => {
+    const repo = new InMemorySummonerRepository();
+    const getAccountSpy = vi.fn().mockResolvedValue({
+      puuid: 'puuid-brtt',
+      gameName: 'brTT',
+      tagLine: 'REX',
+    });
+    const getSummonerSpy = vi.fn().mockResolvedValue({
+      puuid: 'puuid-brtt',
+      profileIconId: 501,
+      summonerLevel: 520,
+    });
+    const getLeaguesSpy = vi.fn().mockResolvedValue([
+      {
+        queueType: 'RANKED_SOLO_5x5',
+        tier: 'GRANDMASTER',
+        rank: 'I',
+        leaguePoints: 680,
+        wins: 95,
+        losses: 75,
+      },
+    ]);
+    const matchIds = Array.from({ length: 20 }, (_, i) => `BR1_${5000 + i}`);
+    const getMatchIdsSpy = vi.fn().mockResolvedValue(matchIds);
+    const getMatchSpy = vi
+      .fn()
+      .mockImplementation(async (_reg: string, id: string) => {
+        const idx = Number(id.split('_')[1] || 0);
+        return buildFakeMatchDto(id, {
+          ownerPuuid: 'puuid-brtt',
+          ownerChampion: 'Draven',
+          gameStartTimestamp: DEFAULT_SEASON_START_MS + (6000 - idx) * 60_000,
+        });
+      });
+
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: getAccountSpy,
+      getSummonerByPuuid: getSummonerSpy,
+      getLeagueEntriesByPuuid: getLeaguesSpy,
+      getMatchIds: getMatchIdsSpy,
+      getMatch: getMatchSpy,
+    });
+
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const handler = createLookupHandler({ repository: repo, dispatcher });
+
+    const req = new Request('http://localhost/api/summoners/BR1/brTT-REX');
+    const res = await handler(req, {
+      params: Promise.resolve({ platform: 'BR1', slug: 'brTT-REX' }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.fromCache).toBe(false);
+    expect(body.profile.summoner.gameName).toBe('brTT');
+    expect(body.profile.summoner.tagLine).toBe('REX');
+    expect(body.profile.summoner.summonerLevel).toBe(520);
+    expect(body.profile.leagues.solo.tier).toBe('GRANDMASTER');
+    expect(body.profile.matches).toHaveLength(20);
+    expect(body.profile.championStats.solo.totalGames).toBe(20);
+    expect(body.profile.championStats.solo.champions[0].championName).toBe(
+      'Draven'
+    );
+
+    expect(getAccountSpy).toHaveBeenCalledTimes(1);
+    expect(getSummonerSpy).toHaveBeenCalledTimes(1);
+    expect(getLeaguesSpy).toHaveBeenCalledTimes(1);
+    expect(getMatchIdsSpy).toHaveBeenCalledTimes(1);
+    expect(getMatchSpy).toHaveBeenCalledTimes(20);
+
+    const savedInDb = await repo.findSummonerByRiotId('BR1', 'brtt', 'rex');
+    expect(savedInDb).not.toBeNull();
+    expect(await repo.getMatchCount()).toBe(20);
+  });
+
+  it('SRCH-05 serves saved player from DB with zero Riot API calls', async () => {
+    const repo = new InMemorySummonerRepository();
+    await repo.upsertSummoner({
+      puuid: 'puuid-saved',
+      platform: 'BR1',
+      gameName: 'SavedPlayer',
+      tagLine: 'BR1',
+      profileIconId: 25,
+      summonerLevel: 310,
+    });
+    await repo.replaceLeagueEntries('BR1', 'puuid-saved', [
+      {
+        queueType: 'RANKED_SOLO_5x5',
+        tier: 'DIAMOND',
+        rank: 'II',
+        leaguePoints: 74,
+        wins: 55,
+        losses: 45,
+      },
+    ]);
+    await repo.upsertMatch(
+      'BR1',
+      buildFakeMatchDto('BR1_8888', {
+        ownerPuuid: 'puuid-saved',
+        ownerChampion: 'Lux',
+      })
+    );
+
+    const getAccountSpy = vi.fn();
+    const getSummonerSpy = vi.fn();
+    const getLeaguesSpy = vi.fn();
+    const getMatchIdsSpy = vi.fn();
+    const getMatchSpy = vi.fn();
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: getAccountSpy,
+      getSummonerByPuuid: getSummonerSpy,
+      getLeagueEntriesByPuuid: getLeaguesSpy,
+      getMatchIds: getMatchIdsSpy,
+      getMatch: getMatchSpy,
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const handler = createLookupHandler({ repository: repo, dispatcher });
+
+    const req = new Request(
+      'http://localhost/api/summoners/br1/savedplayer-br1'
+    );
+    const res = await handler(req, {
+      params: { platform: 'br1', slug: 'savedplayer-br1' },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.fromCache).toBe(true);
+    expect(body.profile.summoner.gameName).toBe('SavedPlayer');
+    expect(body.profile.leagues.solo.tier).toBe('DIAMOND');
+    expect(body.profile.matches).toHaveLength(1);
+
+    expect(getAccountSpy).not.toHaveBeenCalled();
+    expect(getSummonerSpy).not.toHaveBeenCalled();
+    expect(getLeaguesSpy).not.toHaveBeenCalled();
+    expect(getMatchIdsSpy).not.toHaveBeenCalled();
+    expect(getMatchSpy).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 not_found with Riot ID and region when Riot account does not exist (SRCH-07)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: vi
+        .fn()
+        .mockRejectedValue(new RiotNotFoundError('404')),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const handler = createLookupHandler({ repository: repo, dispatcher });
+
+    const res = await handler(
+      new Request('http://localhost/api/summoners/BR1/Unknown-BR1'),
+      { params: { platform: 'BR1', slug: 'Unknown-BR1' } }
+    );
+
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error).toBe('not_found');
+    expect(body.message).toBe('Jogador não encontrado');
+    expect(body.riotId).toBe('Unknown#BR1');
+    expect(body.platform).toBe('BR1');
+  });
+
+  it('returns 404 not_in_region when account has no summoner in selected platform (SRCH-08)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getSummonerByPuuid: vi
+        .fn()
+        .mockRejectedValue(new RiotNotFoundError('404')),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const handler = createLookupHandler({ repository: repo, dispatcher });
+
+    const res = await handler(
+      new Request('http://localhost/api/summoners/EUW1/Hide%20on%20bush-KR1'),
+      { params: { platform: 'EUW1', slug: 'Hide%20on%20bush-KR1' } }
+    );
+
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error).toBe('not_in_region');
+    expect(body.message).toBe('Jogador não encontrado nesta região');
+  });
+
+  it('returns 504 with timeout message when initial lookup exceeds timeout (SRCH-10)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: vi.fn().mockImplementation(async () => {
+        await new Promise((r) => setTimeout(r, 60));
+        return {
+          puuid: 'puuid-slow',
+          gameName: 'SlowOne',
+          tagLine: 'BR1',
+        };
+      }),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+    const handler = createLookupHandler({
+      repository: repo,
+      dispatcher,
+      timeoutMs: 10,
+    });
+
+    const res = await handler(
+      new Request('http://localhost/api/summoners/BR1/SlowOne-BR1'),
+      { params: { platform: 'BR1', slug: 'SlowOne-BR1' } }
+    );
+
+    expect(res.status).toBe(504);
+    const body = await res.json();
+    expect(body.error).toBe('timeout');
+    expect(body.message).toBe(
+      'Muitas buscas no momento. Tente novamente em instantes.'
+    );
+  });
+});
+
 
 
 

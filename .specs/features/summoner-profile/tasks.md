@@ -308,9 +308,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Returns saved profile with 0 Riot calls, or runs initial lookup returning profile / 404 / 504 on 30 s timeout
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 62+ tests pass
+- [x] Returns saved profile with 0 Riot calls, or runs initial lookup returning profile / 404 / 504 on 30 s timeout
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 62+ tests pass
 
 **Tests**: integration
 **Gate**: full

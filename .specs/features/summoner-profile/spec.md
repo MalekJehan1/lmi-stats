@@ -240,13 +240,13 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | SRCH-01 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
 | SRCH-02 | P1: Buscar jogador | Phase 1 (T3), Phase 3 (T16) | In Progress (T3 done) |
 | SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
-| SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | In Progress (T11 done) |
-| SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | In Progress (T9 done) |
+| SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | Verified |
+| SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | Verified |
 | SRCH-06 | P1: Buscar jogador | Phase 1 (T4) | Verified |
-| SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11 done) |
-| SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11 done) |
+| SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11, T13 done) |
+| SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11, T13 done) |
 | SRCH-09 | P1: Buscar jogador | Phase 3 (T21) | In Tasks |
-| SRCH-10 | P1: Buscar jogador | Phase 2 (T12, T13), Phase 3 (T21) | In Progress (T12 done) |
+| SRCH-10 | P1: Buscar jogador | Phase 2 (T12, T13), Phase 3 (T21) | In Progress (T12, T13 done) |
 | PROF-01 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
 | PROF-02 | P1: Perfil e elos | Phase 1 (T8), Phase 3 (T17) | In Progress (T8 done) |
 | PROF-03 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
