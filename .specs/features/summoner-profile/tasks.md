@@ -365,9 +365,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `SearchBar` defaults to BR1, lists all 15 platforms, blocks invalid Riot IDs with `"Digite o Riot ID no formato Nome#TAG"`, and navigates to `/{platform}/summoner/{gameName}-{tagLine}` on valid submit
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 75+ tests pass
+- [x] `SearchBar` defaults to BR1, lists all 15 platforms, blocks invalid Riot IDs with `"Digite o Riot ID no formato Nome#TAG"`, and navigates to `/{platform}/summoner/{gameName}-{tagLine}` on valid submit
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 75+ tests pass
 
 **Tests**: unit
 **Gate**: quick
@@ -677,5 +677,5 @@ Proof: run unit | ✓ tests/ui/search-and-profile.test.tsx > Branding and Legal 
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** Batch 1 (Phase 1: T1-T8) returned at dc9fb1f; Batch 2 (Phase 2: T9-T15) at dc9fb1f
+**Dispatched:** Batch 1 (Phase 1: T1-T8) returned at dc9fb1f; Batch 2 (Phase 2: T9-T15) returned at d801b18; Batch 3 (Phase 3: T16-T22) at d801b18
 **Walked:** none

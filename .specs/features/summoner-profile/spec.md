@@ -237,9 +237,9 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| SRCH-01 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
-| SRCH-02 | P1: Buscar jogador | Phase 1 (T3), Phase 3 (T16) | In Progress (T3 done) |
-| SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
+| SRCH-01 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | Verified |
+| SRCH-02 | P1: Buscar jogador | Phase 1 (T3), Phase 3 (T16) | Verified |
+| SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | Verified |
 | SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | Verified |
 | SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | Verified |
 | SRCH-06 | P1: Buscar jogador | Phase 1 (T4) | Verified |
@@ -295,8 +295,8 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | RIOT-07 | P1: Integração Riot API | Phase 1 (T1), Phase 2 (T9) | Verified |
 | RIOT-08 | P1: Integração Riot API | Phase 1 (T7) | Verified |
 | I18N-01 | P1: Idioma e aviso legal | Phase 1 (T2) | Verified |
-| LEGAL-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | In Progress (T2 done) |
-| BRAND-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | In Progress (T2 done) |
+| LEGAL-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | Verified |
+| BRAND-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | Verified |
 | RESP-01 | P1: Idioma e aviso legal | Phase 3 (T21) | In Tasks |
 
 **Coverage:** 61 total, 61 mapped to tasks, 0 unmapped ✅
