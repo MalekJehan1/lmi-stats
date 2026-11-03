@@ -175,9 +175,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `RiotClient` implements account-v1, summoner-v4, league-v4 `by-puuid`, and match-v5 methods with typed errors and structured logs
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 20+ tests pass
+- [x] `RiotClient` implements account-v1, summoner-v4, league-v4 `by-puuid`, and match-v5 methods with typed errors and structured logs
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 20+ tests pass
 
 **Tests**: unit
 **Gate**: quick
