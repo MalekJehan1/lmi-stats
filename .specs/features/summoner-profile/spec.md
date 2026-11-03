@@ -240,31 +240,31 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | SRCH-01 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
 | SRCH-02 | P1: Buscar jogador | Phase 1 (T3), Phase 3 (T16) | In Progress (T3 done) |
 | SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
-| SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | In Tasks |
+| SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | In Progress (T11 done) |
 | SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | In Progress (T9 done) |
 | SRCH-06 | P1: Buscar jogador | Phase 1 (T4) | Verified |
-| SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Tasks |
-| SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Tasks |
+| SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11 done) |
+| SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11 done) |
 | SRCH-09 | P1: Buscar jogador | Phase 3 (T21) | In Tasks |
 | SRCH-10 | P1: Buscar jogador | Phase 2 (T12, T13), Phase 3 (T21) | In Tasks |
 | PROF-01 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
 | PROF-02 | P1: Perfil e elos | Phase 1 (T8), Phase 3 (T17) | In Progress (T8 done) |
 | PROF-03 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
 | PROF-04 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
-| REFR-01 | P1: Atualizar dados | Phase 2 (T11, T14) | In Tasks |
+| REFR-01 | P1: Atualizar dados | Phase 2 (T11, T14) | In Progress (T11 done) |
 | REFR-02 | P1: Atualizar dados | Phase 3 (T17) | In Tasks |
 | REFR-03 | P1: Atualizar dados | Phase 2 (T10), Phase 3 (T17) | In Progress (T10 done) |
 | REFR-04 | P1: Atualizar dados | Phase 2 (T10, T14) | In Progress (T10 done) |
 | REFR-05 | P1: Atualizar dados | Phase 2 (T10, T14) | In Progress (T10 done) |
 | REFR-06 | P1: Atualizar dados | Phase 2 (T12, T14) | In Tasks |
 | REFR-07 | P1: Atualizar dados | Phase 2 (T14), Phase 3 (T17) | In Tasks |
-| REFR-08 | P1: Atualizar dados | Phase 2 (T11, T14), Phase 3 (T17) | In Tasks |
-| REFR-09 | P1: Atualizar dados | Phase 2 (T11, T14) | In Tasks |
-| HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Tasks |
+| REFR-08 | P1: Atualizar dados | Phase 2 (T11, T14), Phase 3 (T17) | In Progress (T11 done) |
+| REFR-09 | P1: Atualizar dados | Phase 2 (T11, T14) | In Progress (T11 done) |
+| HIST-01 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11 done) |
 | HIST-02 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |
 | HIST-03 | P1: Histórico | Phase 1 (T8), Phase 2 (T15), Phase 3 (T20) | In Progress (T8 done) |
-| HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Tasks |
-| HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Tasks |
+| HIST-04 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11 done) |
+| HIST-05 | P1: Histórico | Phase 2 (T11, T15), Phase 3 (T20) | In Progress (T11 done) |
 | HIST-06 | P1: Histórico | Phase 3 (T20) | In Tasks |
 | HIST-07 | P1: Histórico | Phase 3 (T20) | In Tasks |
 | HIST-08 | P1: Histórico | Phase 1 (T8), Phase 3 (T20) | In Progress (T8 done) |

@@ -1,12 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { InMemorySummonerRepository } from '@/server/db/repository';
-import { MatchDto, MatchParticipantDto } from '@/server/riot/client';
+import {
+  MatchDto,
+  MatchParticipantDto,
+  RiotClient,
+  RiotNotFoundError,
+  RiotUnavailableError,
+} from '@/server/riot/client';
 import { DEFAULT_SEASON_START_MS } from '@/server/stats/calculators';
 import {
   getCooldownRemainingSeconds,
   RefreshGuard,
   RefreshRateLimitError,
 } from '@/server/sync/guards';
+import {
+  PlayerNotFoundError,
+  PlayerNotInRegionError,
+  RefreshFailedError,
+  SyncService,
+} from '@/server/sync/sync-service';
 
 export function buildFakeMatchDto(
   matchId: string,
@@ -385,4 +397,261 @@ describe('Guards Unit', () => {
     ).not.toThrow();
   });
 });
+
+function createMockRiotClient(overrides: Partial<RiotClient> = {}): RiotClient {
+  const base = {
+    getAccountByRiotId: vi.fn().mockResolvedValue({
+      puuid: 'puuid-faker',
+      gameName: 'Hide on bush',
+      tagLine: 'KR1',
+    }),
+    getAccountByPuuid: vi.fn().mockResolvedValue({
+      puuid: 'puuid-faker',
+      gameName: 'Hide on bush',
+      tagLine: 'KR1',
+    }),
+    getSummonerByPuuid: vi.fn().mockResolvedValue({
+      puuid: 'puuid-faker',
+      profileIconId: 6,
+      summonerLevel: 780,
+    }),
+    getLeagueEntriesByPuuid: vi.fn().mockResolvedValue([
+      {
+        queueType: 'RANKED_SOLO_5x5',
+        tier: 'CHALLENGER',
+        rank: 'I',
+        leaguePoints: 1420,
+        wins: 180,
+        losses: 120,
+      },
+    ]),
+    getMatchIds: vi.fn().mockResolvedValue(
+      Array.from({ length: 20 }, (_, i) => `BR1_${1000 + i}`)
+    ),
+    getMatch: vi.fn().mockImplementation(async (_regional: string, id: string) => {
+      const idx = Number(id.split('_')[1] || 0);
+      return buildFakeMatchDto(id, {
+        ownerPuuid: 'puuid-faker',
+        gameStartTimestamp: DEFAULT_SEASON_START_MS + (2000 - idx) * 60_000,
+      });
+    }),
+    ...overrides,
+  };
+  return base as unknown as RiotClient;
+}
+
+describe('SyncService Integration', () => {
+  it('throws PlayerNotFoundError when account-v1 returns 404 (SRCH-07)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: vi
+        .fn()
+        .mockRejectedValue(new RiotNotFoundError('Account 404')),
+    });
+    const service = new SyncService({ riotClient, repository: repo });
+
+    await expect(
+      service.lookup('BR1', 'GhostPlayer', 'BR1')
+    ).rejects.toBeInstanceOf(PlayerNotFoundError);
+  });
+
+  it('throws PlayerNotInRegionError when summoner-v4 returns 404 in selected platform (SRCH-08)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getSummonerByPuuid: vi
+        .fn()
+        .mockRejectedValue(new RiotNotFoundError('Summoner 404')),
+    });
+    const service = new SyncService({ riotClient, repository: repo });
+
+    await expect(
+      service.lookup('KR', 'Hide on bush', 'KR1')
+    ).rejects.toBeInstanceOf(PlayerNotInRegionError);
+  });
+
+  it('skips individual 404 matches during lookup and continues saving remaining matches', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1', 'BR1_404', 'BR1_2']),
+      getMatch: vi
+        .fn()
+        .mockImplementation(async (_reg: string, matchId: string) => {
+          if (matchId === 'BR1_404') {
+            throw new RiotNotFoundError('Match not found');
+          }
+          return buildFakeMatchDto(matchId, {
+            ownerPuuid: 'puuid-faker',
+            gameStartTimestamp:
+              matchId === 'BR1_1'
+                ? DEFAULT_SEASON_START_MS + 90_000
+                : DEFAULT_SEASON_START_MS + 60_000,
+          });
+        }),
+    });
+    const service = new SyncService({ riotClient, repository: repo });
+
+    const res = await service.lookup('BR1', 'Hide on bush', 'KR1');
+    expect(res.profile.matches).toHaveLength(2);
+    expect(res.profile.matches.map((m) => m.matchId)).toEqual([
+      'BR1_1',
+      'BR1_2',
+    ]);
+  });
+
+  it('preserves saved profile data when Riot API fails during refresh (REFR-08)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const initialRiot = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_500']),
+    });
+    const serviceOk = new SyncService({
+      riotClient: initialRiot,
+      repository: repo,
+    });
+    await serviceOk.lookup('BR1', 'Hide on bush', 'KR1');
+
+    const failingRiot = createMockRiotClient({
+      getSummonerByPuuid: vi
+        .fn()
+        .mockRejectedValue(new RiotUnavailableError('Riot 503')),
+    });
+    const serviceFail = new SyncService({
+      riotClient: failingRiot,
+      repository: repo,
+    });
+
+    await expect(
+      serviceFail.refresh('BR1', 'puuid-faker')
+    ).rejects.toBeInstanceOf(RefreshFailedError);
+
+    const saved = await repo.getProfileData('BR1', 'puuid-faker');
+    expect(saved).not.toBeNull();
+    expect(saved?.summoner.gameName).toBe('Hide on bush');
+    expect(saved?.matches).toHaveLength(1);
+    expect(saved?.matches[0].matchId).toBe('BR1_500');
+  });
+
+  it('marks hasMore false in loadMore when Riot API returns fewer than 20 matches (HIST-05)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_901', 'BR1_902', 'BR1_903']),
+    });
+    const service = new SyncService({ riotClient, repository: repo });
+    await repo.upsertSummoner({
+      puuid: 'puuid-faker',
+      platform: 'BR1',
+      gameName: 'Hide on bush',
+      tagLine: 'KR1',
+      profileIconId: 6,
+      summonerLevel: 780,
+    });
+
+    const page = await service.loadMore('BR1', 'puuid-faker', {
+      tab: 'solo',
+      count: 20,
+    });
+    expect(page.matches).toHaveLength(3);
+    expect(page.hasMore).toBe(false);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it('filters normal queue tab in loadMore with type=normal', async () => {
+    const repo = new InMemorySummonerRepository();
+    const getMatchIdsMock = vi.fn().mockResolvedValue(['BR1_701', 'BR1_702']);
+    const riotClient = createMockRiotClient({
+      getMatchIds: getMatchIdsMock,
+      getMatch: vi.fn().mockImplementation(async (_reg: string, id: string) =>
+        buildFakeMatchDto(id, {
+          ownerPuuid: 'puuid-faker',
+          queueId: id === 'BR1_701' ? 400 : 1700, // 400 is Normal Draft, 1700 is Arena
+          gameStartTimestamp:
+            id === 'BR1_701'
+              ? DEFAULT_SEASON_START_MS + 50_000
+              : DEFAULT_SEASON_START_MS + 40_000,
+        })
+      ),
+    });
+    const service = new SyncService({ riotClient, repository: repo });
+
+    const page = await service.loadMore('BR1', 'puuid-faker', {
+      tab: 'normal',
+      count: 20,
+    });
+    expect(getMatchIdsMock).toHaveBeenCalledWith(
+      'americas',
+      'puuid-faker',
+      expect.objectContaining({ type: 'normal', count: 20 })
+    );
+    expect(page.matches).toHaveLength(1);
+    expect(page.matches[0].matchId).toBe('BR1_701');
+  });
+
+  it('fetches up to 100 new matches stopping at latest saved match on refresh (REFR-01)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const initialRiot = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1002', 'BR1_1003']),
+    });
+    const service = new SyncService({
+      riotClient: initialRiot,
+      repository: repo,
+    });
+    await service.lookup('BR1', 'Hide on bush', 'KR1');
+
+    const getMatchSpy = vi
+      .fn()
+      .mockImplementation(async (_reg: string, id: string) => {
+        const idx = Number(id.split('_')[1] || 0);
+        return buildFakeMatchDto(id, {
+          ownerPuuid: 'puuid-faker',
+          gameStartTimestamp: DEFAULT_SEASON_START_MS + (2000 - idx) * 60_000,
+        });
+      });
+    const refreshRiot = createMockRiotClient({
+      getMatchIds: vi
+        .fn()
+        .mockResolvedValue(['BR1_1000', 'BR1_1001', 'BR1_1002', 'BR1_1003']),
+      getMatch: getMatchSpy,
+    });
+    const refreshService = new SyncService({
+      riotClient: refreshRiot,
+      repository: repo,
+    });
+
+    const refreshed = await refreshService.refresh('BR1', 'puuid-faker');
+    expect(refreshed.newMatchesFetched).toBe(2);
+    expect(getMatchSpy).toHaveBeenCalledTimes(2);
+    expect(refreshed.profile.matches).toHaveLength(4);
+  });
+
+  it('updates Riot ID and returns newSlug when player renamed on refresh (REFR-09)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const initialRiot = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1001']),
+    });
+    const service = new SyncService({
+      riotClient: initialRiot,
+      repository: repo,
+    });
+    await service.lookup('BR1', 'Hide on bush', 'KR1');
+
+    const renamedRiot = createMockRiotClient({
+      getAccountByPuuid: vi.fn().mockResolvedValue({
+        puuid: 'puuid-faker',
+        gameName: 'T1 Faker',
+        tagLine: 'GOAT',
+      }),
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1001']),
+    });
+    const renamedService = new SyncService({
+      riotClient: renamedRiot,
+      repository: repo,
+    });
+
+    const res = await renamedService.refresh('BR1', 'puuid-faker');
+    expect(res.renamed).toBe(true);
+    expect(res.newSlug).toBe('T1%20Faker-GOAT');
+    expect(res.profile.summoner.gameName).toBe('T1 Faker');
+    expect(res.profile.summoner.tagLine).toBe('GOAT');
+  });
+});
+
 

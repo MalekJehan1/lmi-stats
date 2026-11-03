@@ -270,9 +270,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `lookup`, `refresh` and `loadMore` satisfy all Riot sync and error recovery rules
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 53+ tests pass
+- [x] `lookup`, `refresh` and `loadMore` satisfy all Riot sync and error recovery rules
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 53+ tests pass
 
 **Tests**: integration
 **Gate**: full
