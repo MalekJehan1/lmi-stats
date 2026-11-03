@@ -1017,6 +1017,14 @@ export class PrismaSummonerRepository implements SummonerRepository {
 }
 
 let defaultRepoInstance: SummonerRepository | null = null;
+let defaultPrismaInstance: PrismaClient | null = null;
+
+function getPrismaClient(): PrismaClient {
+  if (!defaultPrismaInstance) {
+    defaultPrismaInstance = new PrismaClient();
+  }
+  return defaultPrismaInstance;
+}
 
 function buildDemoMatchDto(
   matchId: string,
@@ -1256,11 +1264,17 @@ export function seedDemoRepository(repo: InMemorySummonerRepository): void {
 
 export function getRepository(): SummonerRepository {
   if (!defaultRepoInstance) {
-    const repo = new InMemorySummonerRepository();
-    if (process.env.SEED_DEMO_DATA !== 'false') {
-      seedDemoRepository(repo);
+    const isTestEnv =
+      process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST);
+    if (process.env.DATABASE_URL && !isTestEnv) {
+      defaultRepoInstance = new PrismaSummonerRepository(getPrismaClient());
+    } else {
+      const repo = new InMemorySummonerRepository();
+      if (process.env.SEED_DEMO_DATA !== 'false') {
+        seedDemoRepository(repo);
+      }
+      defaultRepoInstance = repo;
     }
-    defaultRepoInstance = repo;
   }
   return defaultRepoInstance;
 }
