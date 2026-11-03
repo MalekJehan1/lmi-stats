@@ -1,10 +1,18 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "pnpm build",
-  "installCommand": "pnpm install",
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 60
+  "services": {
+    "lmi-stats-web": {
+      "root": ".",
+      "framework": "nextjs",
+      "buildCommand": "pnpm install && pnpm build"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "lmi-stats-web"
+      }
+    }
+  ]
 }
