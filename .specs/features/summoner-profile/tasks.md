@@ -289,9 +289,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Concurrent calls for the same player share a single `RiotClient` execution and return the same result/job state
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 57+ tests pass
+- [x] Concurrent calls for the same player share a single `RiotClient` execution and return the same result/job state
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 57+ tests pass
 
 **Tests**: unit
 **Gate**: quick

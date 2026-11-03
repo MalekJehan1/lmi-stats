@@ -246,7 +246,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11 done) |
 | SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Progress (T11 done) |
 | SRCH-09 | P1: Buscar jogador | Phase 3 (T21) | In Tasks |
-| SRCH-10 | P1: Buscar jogador | Phase 2 (T12, T13), Phase 3 (T21) | In Tasks |
+| SRCH-10 | P1: Buscar jogador | Phase 2 (T12, T13), Phase 3 (T21) | In Progress (T12 done) |
 | PROF-01 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
 | PROF-02 | P1: Perfil e elos | Phase 1 (T8), Phase 3 (T17) | In Progress (T8 done) |
 | PROF-03 | P1: Perfil e elos | Phase 3 (T17) | In Tasks |
@@ -256,7 +256,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | REFR-03 | P1: Atualizar dados | Phase 2 (T10), Phase 3 (T17) | In Progress (T10 done) |
 | REFR-04 | P1: Atualizar dados | Phase 2 (T10, T14) | In Progress (T10 done) |
 | REFR-05 | P1: Atualizar dados | Phase 2 (T10, T14) | In Progress (T10 done) |
-| REFR-06 | P1: Atualizar dados | Phase 2 (T12, T14) | In Tasks |
+| REFR-06 | P1: Atualizar dados | Phase 2 (T12, T14) | In Progress (T12 done) |
 | REFR-07 | P1: Atualizar dados | Phase 2 (T14), Phase 3 (T17) | In Tasks |
 | REFR-08 | P1: Atualizar dados | Phase 2 (T11, T14), Phase 3 (T17) | In Progress (T11 done) |
 | REFR-09 | P1: Atualizar dados | Phase 2 (T11, T14) | In Progress (T11 done) |

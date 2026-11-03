@@ -19,6 +19,11 @@ import {
   RefreshFailedError,
   SyncService,
 } from '@/server/sync/sync-service';
+import {
+  LookupTimeoutError,
+  SyncDispatcher,
+  WorkerQueuePayload,
+} from '@/server/sync/dispatcher';
 
 export function buildFakeMatchDto(
   matchId: string,
@@ -653,5 +658,130 @@ describe('SyncService Integration', () => {
     expect(res.profile.summoner.tagLine).toBe('GOAT');
   });
 });
+
+describe('SyncDispatcher Unit', () => {
+  it('deduplicates concurrent dispatchRefresh calls for the same player (REFR-06)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const initialRiot = createMockRiotClient({
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1001']),
+    });
+    const baseService = new SyncService({
+      riotClient: initialRiot,
+      repository: repo,
+    });
+    await baseService.lookup('BR1', 'Hide on bush', 'KR1');
+
+    const getSummonerSpy = vi.fn().mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 25));
+      return {
+        puuid: 'puuid-faker',
+        profileIconId: 7,
+        summonerLevel: 781,
+      };
+    });
+    const slowRiot = createMockRiotClient({
+      getSummonerByPuuid: getSummonerSpy,
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1001']),
+    });
+    const syncService = new SyncService({
+      riotClient: slowRiot,
+      repository: repo,
+    });
+    const dispatcher = new SyncDispatcher({ syncService, mode: 'inline' });
+
+    const [res1, res2] = await Promise.all([
+      dispatcher.dispatchRefresh('BR1', 'puuid-faker'),
+      dispatcher.dispatchRefresh('br1', 'puuid-faker'),
+    ]);
+
+    expect(getSummonerSpy).toHaveBeenCalledTimes(1);
+    expect(res1.jobId).toBe('refresh:BR1:puuid-faker');
+    expect(res2.jobId).toBe('refresh:BR1:puuid-faker');
+    expect(res1.profile.summoner.summonerLevel).toBe(781);
+    expect(res2.profile.summoner.summonerLevel).toBe(781);
+    expect(dispatcher.getJobStatus(res1.jobId)?.state).toBe('completed');
+  });
+
+  it('deduplicates concurrent dispatchLookup calls case-insensitively', async () => {
+    const repo = new InMemorySummonerRepository();
+    const getAccountSpy = vi.fn().mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 25));
+      return {
+        puuid: 'puuid-faker',
+        gameName: 'Hide on bush',
+        tagLine: 'KR1',
+      };
+    });
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: getAccountSpy,
+      getMatchIds: vi.fn().mockResolvedValue(['BR1_1001']),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({ syncService });
+
+    const [r1, r2] = await Promise.all([
+      dispatcher.dispatchLookup('BR1', 'Hide on bush', 'KR1'),
+      dispatcher.dispatchLookup('br1', 'HIDE ON BUSH', 'kr1'),
+    ]);
+
+    expect(getAccountSpy).toHaveBeenCalledTimes(1);
+    expect(r1.jobId).toBe(r2.jobId);
+    expect(r1.puuid).toBe('puuid-faker');
+  });
+
+  it('throws LookupTimeoutError when initial lookup exceeds timeoutMs (SRCH-10)', async () => {
+    const repo = new InMemorySummonerRepository();
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: vi.fn().mockImplementation(async () => {
+        await new Promise((r) => setTimeout(r, 80));
+        return {
+          puuid: 'puuid-slow',
+          gameName: 'SlowPlayer',
+          tagLine: 'BR1',
+        };
+      }),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({
+      syncService,
+      defaultLookupTimeoutMs: 15,
+    });
+
+    await expect(
+      dispatcher.dispatchLookup('BR1', 'SlowPlayer', 'BR1')
+    ).rejects.toBeInstanceOf(LookupTimeoutError);
+  });
+
+  it('supports worker mode with queueAdapter and tracks failed job status', async () => {
+    const repo = new InMemorySummonerRepository();
+    const enqueued: WorkerQueuePayload[] = [];
+    const riotClient = createMockRiotClient({
+      getAccountByRiotId: vi
+        .fn()
+        .mockRejectedValue(new RiotNotFoundError('404')),
+    });
+    const syncService = new SyncService({ riotClient, repository: repo });
+    const dispatcher = new SyncDispatcher({
+      syncService,
+      mode: 'worker',
+      queueAdapter: {
+        async enqueue(payload) {
+          enqueued.push(payload);
+        },
+      },
+    });
+
+    await expect(
+      dispatcher.dispatchLookup('BR1', 'Missing', 'BR1')
+    ).rejects.toBeInstanceOf(PlayerNotFoundError);
+
+    expect(enqueued).toHaveLength(1);
+    expect(enqueued[0].jobId).toBe('lookup:BR1:missing#br1');
+    const status = dispatcher.getJobStatus('lookup:BR1:missing#br1');
+    expect(status?.state).toBe('failed');
+    expect(status?.error).toBe('not_found');
+  });
+});
+
 
 
