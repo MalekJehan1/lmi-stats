@@ -96,10 +96,12 @@ export function MatchHistory({
   const currentLimit = visibleLimitByTab[activeTab] ?? 20;
   const visibleMatches = tabMatchesAll.slice(0, currentLimit);
 
+  // Allow loading more if not exhausted AND (we have local buffered matches OR we can fetch from API)
   const hasMoreForTab =
     !exhaustedTabs[activeTab] &&
     (tabMatchesAll.length > currentLimit ||
-      (visibleMatches.length >= 20 && visibleMatches.length % 20 === 0));
+      tabMatchesAll.length === 0 ||
+      visibleMatches.length % 20 === 0);
 
   const toggleExpand = (matchId: string) => {
     setExpandedIds((prev) => {
@@ -208,11 +210,23 @@ export function MatchHistory({
       </div>
 
       {visibleMatches.length === 0 ? (
-        <div
-          data-testid="history-empty"
-          className="rounded-xl border border-slate-800 bg-slate-900/90 p-8 text-center text-sm text-slate-400"
-        >
-          {t('history.empty')}
+        <div className="flex flex-col items-center gap-3">
+          <div
+            data-testid="history-empty"
+            className="w-full rounded-xl border border-slate-800 bg-slate-900/90 p-8 text-center text-sm text-slate-400"
+          >
+            {t('history.empty')}
+          </div>
+          {hasMoreForTab && (
+            <button
+              type="button"
+              disabled={loadingMore}
+              onClick={handleLoadMore}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 disabled:opacity-50"
+            >
+              {loadingMore ? t('history.loadingMore') : 'Buscar partidas desta fila'}
+            </button>
+          )}
         </div>
       ) : (
         <div data-testid="match-history-list" className="flex flex-col gap-2.5">
