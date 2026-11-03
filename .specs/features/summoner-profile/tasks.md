@@ -99,9 +99,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `t()` resolves all UI keys in pt-BR and interpolates variables
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 3+ tests pass
+- [x] `t()` resolves all UI keys in pt-BR and interpolates variables
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 3+ tests pass
 
 **Tests**: unit
 **Gate**: quick
