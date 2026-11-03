@@ -251,9 +251,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Rejects refresh during 120 s cooldown or >10 requests/min from same IP with HTTP 429 metadata (`retryAfterSeconds`)
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 45+ tests pass
+- [x] Rejects refresh during 120 s cooldown or >10 requests/min from same IP with HTTP 429 metadata (`retryAfterSeconds`)
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 45+ tests pass
 
 **Tests**: unit
 **Gate**: quick

@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { InMemorySummonerRepository } from '@/server/db/repository';
 import { MatchDto, MatchParticipantDto } from '@/server/riot/client';
 import { DEFAULT_SEASON_START_MS } from '@/server/stats/calculators';
+import {
+  getCooldownRemainingSeconds,
+  RefreshGuard,
+  RefreshRateLimitError,
+} from '@/server/sync/guards';
 
 export function buildFakeMatchDto(
   matchId: string,
@@ -285,3 +290,99 @@ describe('Repository', () => {
     expect(profile?.championStats.flex.isEmpty).toBe(true);
   });
 });
+
+describe('Guards Unit', () => {
+  it('computes remaining cooldown seconds for 120s window (REFR-03)', () => {
+    const now = 1_700_000_000_000;
+    expect(getCooldownRemainingSeconds(now - 30_000, now)).toBe(90);
+    expect(getCooldownRemainingSeconds(now - 119_200, now)).toBe(1);
+    expect(getCooldownRemainingSeconds(now - 120_000, now)).toBe(0);
+    expect(getCooldownRemainingSeconds(null, now)).toBe(0);
+  });
+
+  it('rejects refresh during 120s cooldown with RefreshRateLimitError (REFR-04)', () => {
+    const now = 1_700_000_000_000;
+    const guard = new RefreshGuard({ now: () => now });
+
+    expect(() =>
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: new Date(now - 45_000),
+        ip: '192.168.1.10',
+      })
+    ).toThrowError(RefreshRateLimitError);
+
+    try {
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: new Date(now - 45_000),
+        ip: '192.168.1.10',
+      });
+    } catch (err) {
+      expect(err).toBeInstanceOf(RefreshRateLimitError);
+      const rlErr = err as RefreshRateLimitError;
+      expect(rlErr.status).toBe(429);
+      expect(rlErr.reason).toBe('cooldown');
+      expect(rlErr.retryAfterSeconds).toBe(75);
+    }
+  });
+
+  it('allows refresh when lastUpdatedAt is older than 120s', () => {
+    const now = 1_700_000_000_000;
+    const guard = new RefreshGuard({ now: () => now });
+
+    expect(() =>
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: new Date(now - 121_000),
+        ip: '192.168.1.10',
+      })
+    ).not.toThrow();
+  });
+
+  it('rejects 11th refresh request from same IP within 60s (REFR-05)', () => {
+    let now = 1_700_000_000_000;
+    const guard = new RefreshGuard({ now: () => now });
+
+    for (let i = 0; i < 10; i++) {
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: null,
+        ip: '203.0.113.5',
+      });
+      now += 1000;
+    }
+
+    expect(() =>
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: null,
+        ip: '203.0.113.5',
+      })
+    ).toThrowError(RefreshRateLimitError);
+
+    // Different IP is unaffected
+    expect(() =>
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: null,
+        ip: '203.0.113.99',
+      })
+    ).not.toThrow();
+  });
+
+  it('allows IP requests again after 60s sliding window elapses', () => {
+    let now = 1_700_000_000_000;
+    const guard = new RefreshGuard({ now: () => now });
+
+    for (let i = 0; i < 10; i++) {
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: null,
+        ip: '10.0.0.1',
+      });
+    }
+
+    now += 60_001;
+    expect(() =>
+      guard.assertRefreshAllowed({
+        lastUpdatedAt: null,
+        ip: '10.0.0.1',
+      })
+    ).not.toThrow();
+  });
+});
+
