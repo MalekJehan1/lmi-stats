@@ -422,9 +422,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Renders 2 team summaries and 10 player rows with proportional damage bars, highlighted owner row, and profile links
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 91+ tests pass
+- [x] Renders 2 team summaries and 10 player rows with proportional damage bars, highlighted owner row, and profile links
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 91+ tests pass
 
 **Tests**: unit
 **Gate**: quick
