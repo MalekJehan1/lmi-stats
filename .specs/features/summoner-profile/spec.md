@@ -278,14 +278,14 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | MATCH-06 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
 | MATCH-07 | P1: Detalhe da partida | Phase 3 (T19) | In Tasks |
 | MATCH-08 | P1: Detalhe da partida | Phase 2 (T9), Phase 3 (T19) | In Progress (T9 done) |
-| CHMP-01 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-01 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
 | CHMP-02 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
-| CHMP-03 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-03 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
 | CHMP-04 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
 | CHMP-05 | P1: Estatísticas por campeão | Phase 1 (T8) | Verified |
-| CHMP-06 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
-| CHMP-07 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
-| CHMP-08 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | In Progress (T8 done) |
+| CHMP-06 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
+| CHMP-07 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
+| CHMP-08 | P1: Estatísticas por campeão | Phase 1 (T8), Phase 3 (T18) | Verified |
 | RIOT-01 | P1: Integração Riot API | Phase 1 (T5), Phase 3 (T22) | In Progress (T5 done) |
 | RIOT-02 | P1: Integração Riot API | Phase 1 (T5, T6) | Verified |
 | RIOT-03 | P1: Integração Riot API | Phase 1 (T6) | Verified |

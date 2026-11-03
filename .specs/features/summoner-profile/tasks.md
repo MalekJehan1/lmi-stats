@@ -403,9 +403,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Displays seasonal champion stats, switches Solo/Flex tabs, expands beyond 7 champions on `"Ver todos"`, and shows empty message when 0 matches
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 86+ tests pass
+- [x] Displays seasonal champion stats, switches Solo/Flex tabs, expands beyond 7 champions on `"Ver todos"`, and shows empty message when 0 matches
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 86+ tests pass
 
 **Tests**: unit
 **Gate**: quick
