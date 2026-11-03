@@ -677,5 +677,5 @@ Proof: run unit | ✓ tests/ui/search-and-profile.test.tsx > Branding and Legal 
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** Batch 1 (Phase 1: T1-T8) returned at dc9fb1f; Batch 2 (Phase 2: T9-T15) returned at d801b18; Batch 3 (Phase 3: T16-T22) at d801b18
-**Walked:** none
+**Dispatched:** Batch 1 (Phase 1: T1-T8) returned at dc9fb1f; Batch 2 (Phase 2: T9-T15) returned at d801b18; Batch 3 (Phase 3: T16-T22) returned at 1f43c9a
+**Walked:** Visited `/` (SearchBar with BR1 default and all 15 platforms, invalid Riot ID error `"Digite o Riot ID no formato Nome#TAG"`, valid submit to `/br1/summoner/Kami-BR1`), `/br1/summoner/Kami-BR1` (seeded Challenger Solo / Master Flex profile, relative updated timestamp, RefreshButton with updating and 120s cooldown states, ChampionStatsPanel with Solo/Flex tabs, top 7 champions + `"Ver todos"` expansion and `"Baseado em N partidas salvas"`, MatchHistory with 5 queue tabs, 20 matches, `"Perfeito"` KDA on 0-death match, `"Remake"` badge, inline MatchDetail expansion showing 2 teams and 10 players with proportional damage bars and owner row highlight, and `"Mostrar mais"` pagination), and `/kr/summoner/Faker-T1` (Challenger Solo, `"Unranked"` Flex), responsive at 375px and 1280px with zero horizontal page overflow.
