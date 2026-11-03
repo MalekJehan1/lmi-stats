@@ -137,9 +137,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] `parseRiotId`, `normalizeRiotId`, `toSummonerSlug`, `fromSummonerSlug` handle spaces, accents and invalid inputs
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 10+ tests pass
+- [x] `parseRiotId`, `normalizeRiotId`, `toSummonerSlug`, `fromSummonerSlug` handle spaces, accents and invalid inputs
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 10+ tests pass
 
 **Tests**: unit
 **Gate**: quick

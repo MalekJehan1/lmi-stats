@@ -237,12 +237,12 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| SRCH-01 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Tasks |
+| SRCH-01 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
 | SRCH-02 | P1: Buscar jogador | Phase 1 (T3), Phase 3 (T16) | In Progress (T3 done) |
-| SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Tasks |
+| SRCH-03 | P1: Buscar jogador | Phase 1 (T4), Phase 3 (T16) | In Progress (T4 done) |
 | SRCH-04 | P1: Buscar jogador | Phase 2 (T11, T13) | In Tasks |
 | SRCH-05 | P1: Buscar jogador | Phase 2 (T9, T13) | In Tasks |
-| SRCH-06 | P1: Buscar jogador | Phase 1 (T4) | In Tasks |
+| SRCH-06 | P1: Buscar jogador | Phase 1 (T4) | Verified |
 | SRCH-07 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Tasks |
 | SRCH-08 | P1: Buscar jogador | Phase 2 (T11, T13), Phase 3 (T21) | In Tasks |
 | SRCH-09 | P1: Buscar jogador | Phase 3 (T21) | In Tasks |

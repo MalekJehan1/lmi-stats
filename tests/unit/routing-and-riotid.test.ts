@@ -7,6 +7,15 @@ import {
   regionalOf,
   normalizePlatform,
 } from '@/server/riot/routing';
+import {
+  parseRiotId,
+  normalize,
+  normalizeRiotId,
+  riotIdsEqual,
+  toSummonerSlug,
+  fromSummonerSlug,
+  buildSummonerUrl,
+} from '@/server/riot/riot-id';
 
 describe('i18n', () => {
   it('I18N-01 resolves all UI copy from pt-BR catalog', () => {
@@ -103,4 +112,77 @@ describe('Routing', () => {
     expect(normalizePlatform('xyz')).toBeNull();
   });
 });
+
+describe('RiotId', () => {
+  it('SRCH-06 matches gameName and tagLine case-insensitively', () => {
+    const a = normalizeRiotId('Faker', 'T1');
+    const b = normalizeRiotId('faker', 't1');
+    expect(a.gameNameNorm).toBe('faker');
+    expect(a.tagLineNorm).toBe('t1');
+    expect(a.key).toBe(b.key);
+    expect(riotIdsEqual({ gameName: 'JoGaDoR', tagLine: 'bR1' }, { gameName: 'jogador', tagLine: 'BR1' })).toBe(true);
+    expect(normalize('  CaPs  ')).toBe('caps');
+  });
+
+  it('SRCH-03 validates format with single #, name 3-16 chars and tag 3-5 chars', () => {
+    expect(parseRiotId('Hide on bush#KR1')).toEqual({
+      ok: true,
+      gameName: 'Hide on bush',
+      tagLine: 'KR1',
+    });
+
+    // Missing # or multiple #
+    expect(parseRiotId('HideOnBush')).toEqual({
+      ok: false,
+      error: 'Digite o Riot ID no formato Nome#TAG',
+    });
+    expect(parseRiotId('Name#Tag#Extra')).toEqual({
+      ok: false,
+      error: 'Digite o Riot ID no formato Nome#TAG',
+    });
+
+    // Name < 3 or > 16
+    expect(parseRiotId('ab#BR1')).toEqual({
+      ok: false,
+      error: 'Digite o Riot ID no formato Nome#TAG',
+    });
+    expect(parseRiotId('12345678901234567#BR1')).toEqual({
+      ok: false,
+      error: 'Digite o Riot ID no formato Nome#TAG',
+    });
+
+    // Tag < 3 or > 5
+    expect(parseRiotId('Player#BR')).toEqual({
+      ok: false,
+      error: 'Digite o Riot ID no formato Nome#TAG',
+    });
+    expect(parseRiotId('Player#BR1234')).toEqual({
+      ok: false,
+      error: 'Digite o Riot ID no formato Nome#TAG',
+    });
+  });
+
+  it('SRCH-01 encodes and decodes slugs with spaces, hyphens and accents', () => {
+    const slug = toSummonerSlug('João Pão-Doce', 'BR1');
+    expect(slug).toBe('Jo%C3%A3o%20P%C3%A3o-Doce-BR1');
+
+    const parsed = fromSummonerSlug(slug);
+    expect(parsed).toEqual({
+      ok: true,
+      gameName: 'João Pão-Doce',
+      tagLine: 'BR1',
+    });
+
+    expect(buildSummonerUrl('BR1', 'Nome Legal', 'BR1')).toBe(
+      '/br1/summoner/Nome%20Legal-BR1'
+    );
+  });
+
+  it('rejects malformed slugs without a separator or with invalid lengths', () => {
+    expect(fromSummonerSlug('invalidslug').ok).toBe(false);
+    expect(fromSummonerSlug('ab-BR1').ok).toBe(false);
+    expect(fromSummonerSlug('ValidName-B').ok).toBe(false);
+  });
+});
+
 
