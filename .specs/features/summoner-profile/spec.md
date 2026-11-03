@@ -293,7 +293,7 @@ Jogadores de League of Legends querem ver rapidamente o desempenho de qualquer j
 | RIOT-05 | P1: Integração Riot API | Phase 1 (T6) | Verified |
 | RIOT-06 | P1: Integração Riot API | Phase 1 (T6) | Verified |
 | RIOT-07 | P1: Integração Riot API | Phase 1 (T1), Phase 2 (T9) | In Progress (T1 done) |
-| RIOT-08 | P1: Integração Riot API | Phase 1 (T7) | In Tasks |
+| RIOT-08 | P1: Integração Riot API | Phase 1 (T7) | Verified |
 | I18N-01 | P1: Idioma e aviso legal | Phase 1 (T2) | Verified |
 | LEGAL-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | In Progress (T2 done) |
 | BRAND-01 | P1: Idioma e aviso legal | Phase 1 (T2), Phase 3 (T16) | In Progress (T2 done) |

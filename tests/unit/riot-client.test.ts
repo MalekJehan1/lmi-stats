@@ -7,6 +7,14 @@ import {
   RiotUnavailableError,
   type RiotCallLogEntry,
 } from '@/server/riot/client';
+import {
+  DataDragon,
+  profileIconImg,
+  championImg,
+  itemImg,
+  spellImg,
+  runeImg,
+} from '@/server/riot/ddragon';
 
 function createFakeClock(initialMs = 1_000_000) {
   let currentMs = initialMs;
@@ -346,3 +354,102 @@ describe('RateLimiter and RiotClient', () => {
     expect(account.gameName).toBe('NewName');
   });
 });
+
+describe('DataDragon', () => {
+  it('RIOT-08 caches version for 24h and builds asset URLs with fallback', async () => {
+    const clock = createFakeClock();
+    let fetchCount = 0;
+    const fakeFetch = vi.fn(async () => {
+      fetchCount += 1;
+      const version = fetchCount === 1 ? '14.21.1' : '14.22.1';
+      return new Response(JSON.stringify([version, '14.20.1']), {
+        status: 200,
+      });
+    });
+
+    const ddragon = new DataDragon({
+      fetchImpl: fakeFetch as unknown as typeof fetch,
+      now: clock.now,
+    });
+
+    const v1 = await ddragon.getVersion();
+    expect(v1).toBe('14.21.1');
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+
+    // Within 24h (e.g. 23h later), returns cached version without re-fetching
+    clock.advance(23 * 60 * 60 * 1000);
+    const v2 = await ddragon.getVersion();
+    expect(v2).toBe('14.21.1');
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+
+    // After 24h + 1ms, refreshes cache
+    clock.advance(60 * 60 * 1000 + 1);
+    const v3 = await ddragon.getVersion();
+    expect(v3).toBe('14.22.1');
+    expect(fakeFetch).toHaveBeenCalledTimes(2);
+
+    // Builds valid URLs for known assets
+    expect(ddragon.profileIconUrl(588, v3)).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/profileicon/588.png'
+    );
+    expect(ddragon.championUrl('Ahri', v3)).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/Ahri.png'
+    );
+    expect(ddragon.itemUrl(3157, v3)).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/item/3157.png'
+    );
+    expect(ddragon.spellUrl(4, v3)).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/spell/SummonerFlash.png'
+    );
+    expect(ddragon.runeUrl(8112)).toContain(
+      'https://ddragon.leagueoflegends.com/cdn/img/perk-images/'
+    );
+
+    // Returns null for empty/unknown IDs (edge case)
+    expect(ddragon.itemUrl(0, v3)).toBeNull();
+    expect(ddragon.spellUrl(999999, v3)).toBeNull();
+    expect(ddragon.runeUrl(999999)).toBeNull();
+    expect(ddragon.championUrl('', v3)).toBeNull();
+  });
+
+  it('returns null for empty item slots and unknown spell or rune IDs in standalone helpers', () => {
+    expect(profileIconImg(10, '14.22.1')).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/profileicon/10.png'
+    );
+    expect(profileIconImg(-1)).toBeNull();
+    expect(championImg('Lux', '14.22.1')).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/Lux.png'
+    );
+    expect(championImg('')).toBeNull();
+    expect(itemImg(0)).toBeNull();
+    expect(itemImg(3089, '14.22.1')).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/item/3089.png'
+    );
+    expect(spellImg(14, '14.22.1')).toBe(
+      'https://ddragon.leagueoflegends.com/cdn/14.22.1/img/spell/SummonerDot.png'
+    );
+    expect(spellImg(0)).toBeNull();
+    expect(runeImg(8000)).toContain('perk-images');
+    expect(runeImg(0)).toBeNull();
+  });
+
+  it('falls back to default version when versions.json request fails', async () => {
+    const failingFetch = vi.fn(async () => {
+      throw new Error('network down');
+    });
+    const ddragon = new DataDragon({
+      fetchImpl: failingFetch as unknown as typeof fetch,
+      fallbackVersion: '14.22.1',
+    });
+    expect(await ddragon.getVersion()).toBe('14.22.1');
+  });
+
+  it('recognizes unknown champion names when allowlist is configured', () => {
+    const ddragon = new DataDragon({
+      knownChampions: new Set(['Ahri', 'Lux']),
+    });
+    expect(ddragon.championUrl('Ahri', '14.22.1')).toContain('Ahri.png');
+    expect(ddragon.championUrl('UnknownChampXYZ', '14.22.1')).toBeNull();
+  });
+});
+

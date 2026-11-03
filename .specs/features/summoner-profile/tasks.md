@@ -194,9 +194,9 @@ T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Caches Data Dragon version for 24 h and returns CDN URLs or `null` for missing IDs
-- [ ] Gate check passes: `pnpm vitest run --reporter=verbose`
-- [ ] Test count: 24+ tests pass
+- [x] Caches Data Dragon version for 24 h and returns CDN URLs or `null` for missing IDs
+- [x] Gate check passes: `pnpm vitest run --reporter=verbose`
+- [x] Test count: 24+ tests pass
 
 **Tests**: unit
 **Gate**: quick
